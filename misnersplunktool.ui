@@ -1,0 +1,2773 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>749</width>
+    <height>574</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Misner Splunk Tool</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="Z:/Python/MisnerSplunkTool/icons.qrc">
+    <normaloff>:/favorites.png</normaloff>:/favorites.png</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QTabWidget" name="tabWidgetMain">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>110</y>
+      <width>731</width>
+      <height>421</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string/>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="tabGeneral">
+     <attribute name="title">
+      <string>General</string>
+     </attribute>
+     <widget class="QGroupBox" name="boxProcessControl">
+      <property name="geometry">
+       <rect>
+        <x>7</x>
+        <y>10</y>
+        <width>261</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Process Control</string>
+      </property>
+      <widget class="QPushButton" name="buttonRestartSplunkd">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>17</y>
+         <width>131</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>Restart the splunkd process.</string>
+       </property>
+       <property name="text">
+        <string>Restart splunkd</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="buttonRefreshConfigurations">
+       <property name="geometry">
+        <rect>
+         <x>110</x>
+         <y>45</y>
+         <width>131</width>
+         <height>23</height>
+        </rect>
+       </property>
+       <property name="toolTip">
+        <string>Execute endpoints found with '_reload' links, similar to HTTP '/debug/refresh'. Splunk Enterprise instances only.</string>
+       </property>
+       <property name="text">
+        <string>Refresh Configurations</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="labelRestartRequired">
+       <property name="geometry">
+        <rect>
+         <x>70</x>
+         <y>22</y>
+         <width>31</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>?</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_22">
+       <property name="geometry">
+        <rect>
+         <x>14</x>
+         <y>22</y>
+         <width>51</width>
+         <height>41</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="toolTip">
+        <string>Notifies if splunkd is reporting that a restart is required.</string>
+       </property>
+       <property name="text">
+        <string>Restart
+required:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QLabel" name="label_8">
+      <property name="geometry">
+       <rect>
+        <x>150</x>
+        <y>468</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Send to:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="boxProcessControl_2">
+      <property name="geometry">
+       <rect>
+        <x>7</x>
+        <y>93</y>
+        <width>711</width>
+        <height>295</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Messages</string>
+      </property>
+      <widget class="QLabel" name="labelRestartRequired_2">
+       <property name="geometry">
+        <rect>
+         <x>130</x>
+         <y>25</y>
+         <width>31</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+      <widget class="QTableWidget" name="tableMessages">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>20</y>
+         <width>691</width>
+         <height>265</height>
+        </rect>
+       </property>
+       <property name="editTriggers">
+        <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
+       </property>
+       <property name="horizontalScrollMode">
+        <enum>QAbstractItemView::ScrollPerPixel</enum>
+       </property>
+       <property name="sortingEnabled">
+        <bool>true</bool>
+       </property>
+       <property name="columnCount">
+        <number>4</number>
+       </property>
+       <attribute name="verticalHeaderVisible">
+        <bool>false</bool>
+       </attribute>
+       <attribute name="verticalHeaderDefaultSectionSize">
+        <number>20</number>
+       </attribute>
+       <column>
+        <property name="text">
+         <string>Time Created</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Severity</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Title</string>
+        </property>
+       </column>
+       <column>
+        <property name="text">
+         <string>Description</string>
+        </property>
+       </column>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="boxDeployment">
+      <property name="geometry">
+       <rect>
+        <x>277</x>
+        <y>10</y>
+        <width>441</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Deployment</string>
+      </property>
+      <widget class="QLabel" name="labelDeploymentServerHeader">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>15</y>
+         <width>181</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Client of Deployment Server:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="labelDeploymentServer">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>15</y>
+         <width>221</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>(none)</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="labelClusterMasterHeader">
+       <property name="geometry">
+        <rect>
+         <x>10</x>
+         <y>35</y>
+         <width>191</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Cluster Master:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="labelSHCDeployerHeader">
+       <property name="geometry">
+        <rect>
+         <x>20</x>
+         <y>55</y>
+         <width>181</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>Fetch from SHC Deployer:</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="labelClusterMaster">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>35</y>
+         <width>221</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>(none)</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="labelSHCDeployer">
+       <property name="geometry">
+        <rect>
+         <x>210</x>
+         <y>55</y>
+         <width>221</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <weight>50</weight>
+         <bold>false</bold>
+        </font>
+       </property>
+       <property name="text">
+        <string>(none)</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+       <property name="textInteractionFlags">
+        <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+       </property>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabConfiguration">
+     <attribute name="title">
+      <string>Configuration</string>
+     </attribute>
+     <widget class="QComboBox" name="comboConfig">
+      <property name="geometry">
+       <rect>
+        <x>100</x>
+        <y>10</y>
+        <width>151</width>
+        <height>21</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Pulls the selected active configuration from the Splunk instance.
+(Retrieved from REST API /services/properties)</string>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="editConfig">
+      <property name="geometry">
+       <rect>
+        <x>7</x>
+        <y>40</y>
+        <width>711</width>
+        <height>351</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Courier New</family>
+       </font>
+      </property>
+      <property name="autoFormatting">
+       <set>QTextEdit::AutoNone</set>
+      </property>
+      <property name="undoRedoEnabled">
+       <bool>false</bool>
+      </property>
+      <property name="lineWrapMode">
+       <enum>QTextEdit::NoWrap</enum>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_41">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>81</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Configuration:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelHighlighter">
+      <property name="geometry">
+       <rect>
+        <x>270</x>
+        <y>10</y>
+        <width>81</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Highlighter:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editConfigurationFind">
+      <property name="geometry">
+       <rect>
+        <x>380</x>
+        <y>10</y>
+        <width>211</width>
+        <height>20</height>
+       </rect>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonConfigurationMark">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>600</x>
+        <y>10</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>Poll the Splunk instance for current values.</string>
+      </property>
+      <property name="text">
+       <string>Mark</string>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="buttonConfigurationClear">
+      <property name="enabled">
+       <bool>true</bool>
+      </property>
+      <property name="geometry">
+       <rect>
+        <x>660</x>
+        <y>10</y>
+        <width>51</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="toolTip">
+       <string>Poll the Splunk instance for current values.</string>
+      </property>
+      <property name="text">
+       <string>Clear</string>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabInputStatus">
+     <attribute name="title">
+      <string>Input Status</string>
+     </attribute>
+     <widget class="QTabWidget" name="tabWidgetInputStatus">
+      <property name="geometry">
+       <rect>
+        <x>8</x>
+        <y>9</y>
+        <width>711</width>
+        <height>381</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tabInputStatusFileStatus">
+       <attribute name="title">
+        <string>File Status</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableFileStatus">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>341</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="columnCount">
+         <number>6</number>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Location</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Type</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Percent</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Position</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Size</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Parent</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tabInputStatusTCP">
+       <attribute name="title">
+        <string>TCP</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableTCP">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>341</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="columnCount">
+         <number>4</number>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>TCP Type</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Port</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Source</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Time Opened</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tabInputStatusUDP">
+       <attribute name="title">
+        <string>UDP</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableUDP">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>341</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="columnCount">
+         <number>1</number>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Hosts</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tabInputStatusModular">
+       <attribute name="title">
+        <string>Modular</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableModular">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>341</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="columnCount">
+         <number>5</number>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Location</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Exit Status</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Opened</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Closed</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Total Bytes</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tabInputStatusExec">
+       <attribute name="title">
+        <string>Exec</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableExec">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>341</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="columnCount">
+         <number>5</number>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Location</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Exit Status</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Opened</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Closed</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Total Bytes</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabApps">
+     <attribute name="title">
+      <string>Apps</string>
+     </attribute>
+     <widget class="QTableWidget" name="tableApps">
+      <property name="geometry">
+       <rect>
+        <x>7</x>
+        <y>9</y>
+        <width>711</width>
+        <height>381</height>
+       </rect>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="horizontalScrollMode">
+       <enum>QAbstractItemView::ScrollPerPixel</enum>
+      </property>
+      <property name="sortingEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="columnCount">
+       <number>5</number>
+      </property>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>20</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Active</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Title</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Version</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Label</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Description</string>
+       </property>
+      </column>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabCluster">
+     <attribute name="title">
+      <string>Indexer Cluster</string>
+     </attribute>
+     <widget class="QCheckBox" name="checkClusterDataSearchable">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>161</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>All Data is Searchable</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkClusterSearchFactorMet">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>161</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Search Factor is Met</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkClusterReplicationFactorMet">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>50</y>
+        <width>161</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Replication Factor is Met</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_32">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>10</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Peers:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_33">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>30</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Indexes:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelClusterIndexesSearchable">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>30</y>
+        <width>81</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>? searchable</string>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+     <widget class="QTabWidget" name="tabWidgetCluster">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>80</y>
+        <width>711</width>
+        <height>311</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tabClusterPeers">
+       <attribute name="title">
+        <string>Peers</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableClusterPeers">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>271</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <property name="columnCount">
+         <number>10</number>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Peer Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Site</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Fully Searchable</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Status</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Buckets</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Location</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Last Heartbeat</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Replication Port</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Base Generation ID</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>GUID</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tabClusterIndexes">
+       <attribute name="title">
+        <string>Indexes</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableClusterIndexes">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>271</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <property name="columnCount">
+         <number>6</number>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Index Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Fully Searchable</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Searchable Data Copies</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Replicated Data Copies</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Buckets</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Cumulative Raw Data Size</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tabClusterSearchHeads">
+       <attribute name="title">
+        <string>Search Heads</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableClusterSearchHeads">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>271</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="sortingEnabled">
+         <bool>true</bool>
+        </property>
+        <property name="columnCount">
+         <number>5</number>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Search Head Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Site</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Status</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Location</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>GUID</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+     </widget>
+     <widget class="QLabel" name="labelClusterIndexesNotSearchable">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>30</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>? not searchable</string>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelClusterPeersNotSearchable">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>10</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>? not searchable</string>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelClusterPeersSearchable">
+      <property name="geometry">
+       <rect>
+        <x>260</x>
+        <y>10</y>
+        <width>81</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>? searchable</string>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelClusterPeersUp">
+      <property name="geometry">
+       <rect>
+        <x>200</x>
+        <y>50</y>
+        <width>101</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>?/? Peers Up</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelClusterSearchHeadsUp">
+      <property name="geometry">
+       <rect>
+        <x>310</x>
+        <y>50</y>
+        <width>141</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>?/? Search Heads Up</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkClusterMaintenanceMode">
+      <property name="geometry">
+       <rect>
+        <x>460</x>
+        <y>10</y>
+        <width>121</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Maintenance Mode</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkClusterRollingRestartFlag">
+      <property name="geometry">
+       <rect>
+        <x>460</x>
+        <y>30</y>
+        <width>121</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Rolling Restart Flag</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkClusterServiceReadyFlag">
+      <property name="geometry">
+       <rect>
+        <x>590</x>
+        <y>30</y>
+        <width>121</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Service Ready Flag</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkClusterInitializedFlag">
+      <property name="geometry">
+       <rect>
+        <x>590</x>
+        <y>10</y>
+        <width>121</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Initialized Flag</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkClusterIndexingReadyFlag">
+      <property name="geometry">
+       <rect>
+        <x>590</x>
+        <y>50</y>
+        <width>121</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Indexing Ready Flag</string>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabSHCluster">
+     <attribute name="title">
+      <string>Search Head Cluster</string>
+     </attribute>
+     <widget class="QCheckBox" name="checkSHClusterDynamicCaptain">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>10</y>
+        <width>121</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Dynamic Captain</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkSHClusterRollingRestartFlag">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>30</y>
+        <width>121</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Rolling Restart Flag</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkSHClusterServiceReadyFlag">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>30</y>
+        <width>181</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Service Ready Flag</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkSHClusterMinimumPeersJoinedFlag">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>50</y>
+        <width>181</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Minimum Peers Joined Flag</string>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="checkSHClusterInitializedFlag">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>181</width>
+        <height>17</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Initialized Flag</string>
+      </property>
+     </widget>
+     <widget class="QTableWidget" name="tableSHClusterMembers">
+      <property name="geometry">
+       <rect>
+        <x>7</x>
+        <y>80</y>
+        <width>711</width>
+        <height>311</height>
+       </rect>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="horizontalScrollMode">
+       <enum>QAbstractItemView::ScrollPerPixel</enum>
+      </property>
+      <property name="sortingEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="columnCount">
+       <number>9</number>
+      </property>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>20</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Member Name</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Site</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Status</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Artifacts</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Location</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Last Heartbeat</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Replication Port</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Restart Required</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>GUID</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QLabel" name="label_34">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>10</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Captain:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelSHClusterCaptain">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>10</y>
+        <width>311</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>(none)</string>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_35">
+      <property name="geometry">
+       <rect>
+        <x>340</x>
+        <y>30</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Elected:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelSHClusterCaptainElected">
+      <property name="geometry">
+       <rect>
+        <x>400</x>
+        <y>30</y>
+        <width>311</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>(none)</string>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabResourceUsage">
+     <attribute name="title">
+      <string>Resource Usage</string>
+     </attribute>
+     <widget class="QTableWidget" name="tableResourceUsageProcesses">
+      <property name="geometry">
+       <rect>
+        <x>7</x>
+        <y>60</y>
+        <width>351</width>
+        <height>331</height>
+       </rect>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="horizontalScrollMode">
+       <enum>QAbstractItemView::ScrollPerPixel</enum>
+      </property>
+      <property name="sortingEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="columnCount">
+       <number>6</number>
+      </property>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>20</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Process</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>PID</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>PPID</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>CPU</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Mem</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Arguments</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QTableWidget" name="tableResourceUsageDisks">
+      <property name="geometry">
+       <rect>
+        <x>367</x>
+        <y>60</y>
+        <width>351</width>
+        <height>331</height>
+       </rect>
+      </property>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
+      </property>
+      <property name="horizontalScrollMode">
+       <enum>QAbstractItemView::ScrollPerPixel</enum>
+      </property>
+      <property name="sortingEnabled">
+       <bool>true</bool>
+      </property>
+      <property name="columnCount">
+       <number>4</number>
+      </property>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>20</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Mount</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Type</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Used</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Total</string>
+       </property>
+      </column>
+     </widget>
+     <widget class="QLabel" name="label_23">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>31</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>CPU:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_25">
+      <property name="geometry">
+       <rect>
+        <x>180</x>
+        <y>10</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Memory:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelResourceUsageSwapHeader">
+      <property name="geometry">
+       <rect>
+        <x>450</x>
+        <y>10</y>
+        <width>51</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Swap:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QProgressBar" name="progressResourceUsageCPU">
+      <property name="geometry">
+       <rect>
+        <x>50</x>
+        <y>10</y>
+        <width>111</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>System-wide CPU usage.</string>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="textDirection">
+       <enum>QProgressBar::TopToBottom</enum>
+      </property>
+     </widget>
+     <widget class="QProgressBar" name="progressResourceUsageMemory">
+      <property name="geometry">
+       <rect>
+        <x>240</x>
+        <y>10</y>
+        <width>111</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>System-wide physical memory usage.</string>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="textVisible">
+       <bool>true</bool>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="invertedAppearance">
+       <bool>false</bool>
+      </property>
+      <property name="textDirection">
+       <enum>QProgressBar::TopToBottom</enum>
+      </property>
+     </widget>
+     <widget class="QProgressBar" name="progressResourceUsageSwap">
+      <property name="geometry">
+       <rect>
+        <x>510</x>
+        <y>10</y>
+        <width>111</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>System-wide swap memory usage.</string>
+      </property>
+      <property name="value">
+       <number>0</number>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="textVisible">
+       <bool>true</bool>
+      </property>
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="invertedAppearance">
+       <bool>false</bool>
+      </property>
+      <property name="textDirection">
+       <enum>QProgressBar::TopToBottom</enum>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_27">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>40</y>
+        <width>111</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Splunk Processes</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_28">
+      <property name="geometry">
+       <rect>
+        <x>370</x>
+        <y>40</y>
+        <width>111</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>Disk Partitions</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelResourceUsageMemory">
+      <property name="geometry">
+       <rect>
+        <x>360</x>
+        <y>10</y>
+        <width>81</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>(none)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+     <widget class="QLabel" name="labelResourceUsageSwap">
+      <property name="geometry">
+       <rect>
+        <x>630</x>
+        <y>10</y>
+        <width>81</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <weight>50</weight>
+        <bold>false</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>(none)</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+      </property>
+      <property name="textInteractionFlags">
+       <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tabRestApi">
+     <attribute name="title">
+      <string>REST API</string>
+     </attribute>
+     <widget class="QComboBox" name="comboRestURI">
+      <property name="geometry">
+       <rect>
+        <x>113</x>
+        <y>10</y>
+        <width>521</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;URI of the REST API endpoint to query. Example:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;GET URI: &lt;/span&gt;/services/server/info&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="editable">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_16">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>11</y>
+        <width>41</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>URI:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+     <widget class="QComboBox" name="comboRestMethod">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>10</y>
+        <width>61</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>REST API method used.</string>
+      </property>
+      <item>
+       <property name="text">
+        <string>GET</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>POST</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>DELETE</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QPushButton" name="buttonRestSend">
+      <property name="geometry">
+       <rect>
+        <x>650</x>
+        <y>9</y>
+        <width>61</width>
+        <height>22</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>Send REST API call to connected splunkd instance.</string>
+      </property>
+      <property name="text">
+       <string>Send</string>
+      </property>
+      <property name="checkable">
+       <bool>false</bool>
+      </property>
+     </widget>
+     <widget class="QTextEdit" name="editRestResult">
+      <property name="geometry">
+       <rect>
+        <x>7</x>
+        <y>60</y>
+        <width>711</width>
+        <height>331</height>
+       </rect>
+      </property>
+      <property name="font">
+       <font>
+        <family>Courier New</family>
+       </font>
+      </property>
+      <property name="autoFormatting">
+       <set>QTextEdit::AutoNone</set>
+      </property>
+      <property name="undoRedoEnabled">
+       <bool>false</bool>
+      </property>
+      <property name="lineWrapMode">
+       <enum>QTextEdit::NoWrap</enum>
+      </property>
+      <property name="readOnly">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="editRestBodyInput">
+      <property name="geometry">
+       <rect>
+        <x>113</x>
+        <y>34</y>
+        <width>521</width>
+        <height>20</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Body of message to input into the request. Example:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;POST URI: &lt;/span&gt;/services/properties/deploymentclient/target-broker:deploymentServer&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Body:&lt;/span&gt; disabled=0&amp;amp;targetUri=1.2.3.4:8089&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_26">
+      <property name="geometry">
+       <rect>
+        <x>70</x>
+        <y>35</y>
+        <width>41</width>
+        <height>16</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>Body:</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+   <widget class="QComboBox" name="comboAddress">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>30</y>
+      <width>291</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>Host or IP address of the Splunk instance. Optionally add management port (i.e. myhost:8089), only necessary if using a port other than 8089.</string>
+    </property>
+    <property name="editable">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_13">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>10</y>
+      <width>191</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Address of Splunk Instance</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_14">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>10</y>
+      <width>101</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Username</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_15">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>10</y>
+      <width>101</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Password</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="buttonPoll">
+    <property name="enabled">
+     <bool>true</bool>
+    </property>
+    <property name="geometry">
+     <rect>
+      <x>688</x>
+      <y>29</y>
+      <width>51</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>Poll the Splunk instance for current values.</string>
+    </property>
+    <property name="text">
+     <string>Refresh</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_17">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>60</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Host:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_18">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>80</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Type:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_19">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>60</y>
+      <width>41</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>GUID:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_20">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>60</y>
+      <width>51</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>OS:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_21">
+    <property name="geometry">
+     <rect>
+      <x>540</x>
+      <y>80</y>
+      <width>51</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>System:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelHost">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>60</y>
+      <width>191</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>(none)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelType">
+    <property name="geometry">
+     <rect>
+      <x>60</x>
+      <y>80</y>
+      <width>191</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>(none)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelGUID">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>60</y>
+      <width>231</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>(none)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelOS">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>60</y>
+      <width>141</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>(none)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelSystem">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>80</y>
+      <width>141</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>(none)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="buttonToggle">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>29</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="toolTip">
+     <string>Connect/Disconnect from the Splunk instance.</string>
+    </property>
+    <property name="text">
+     <string>Connect</string>
+    </property>
+    <property name="checkable">
+     <bool>false</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_24">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>80</y>
+      <width>51</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>Uptime:</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelUptime">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>80</y>
+      <width>231</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <weight>50</weight>
+      <bold>false</bold>
+     </font>
+    </property>
+    <property name="text">
+     <string>(none)</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+    </property>
+    <property name="textInteractionFlags">
+     <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByMouse</set>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelRole">
+    <property name="geometry">
+     <rect>
+      <x>13</x>
+      <y>8</y>
+      <width>36</width>
+      <height>46</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap resource="Z:/Python/MisnerSplunkTool/icons.qrc">:/blank.png</pixmap>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="editUsername">
+    <property name="geometry">
+     <rect>
+      <x>360</x>
+      <y>30</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="editPassword">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>30</y>
+      <width>113</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="echoMode">
+     <enum>QLineEdit::Password</enum>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>749</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionBuildMisnersplunktoolConf"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionHelp"/>
+    <addaction name="separator"/>
+    <addaction name="actionAbout"/>
+   </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionRestartSplunkd"/>
+    <addaction name="actionRefreshConfigurations"/>
+    <addaction name="separator"/>
+    <addaction name="actionChangeDeploymentServer"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuHelp"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar">
+   <property name="sizeGripEnabled">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionOpen">
+   <property name="text">
+    <string>Open</string>
+   </property>
+  </action>
+  <action name="actionSaveAs">
+   <property name="text">
+    <string>Save As...</string>
+   </property>
+  </action>
+  <action name="actionHelp">
+   <property name="text">
+    <string>Help</string>
+   </property>
+  </action>
+  <action name="actionOpenRecent">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Open Recent</string>
+   </property>
+  </action>
+  <action name="actionBuildMisnersplunktoolConf">
+   <property name="text">
+    <string>Build misnersplunktool.conf</string>
+   </property>
+  </action>
+  <action name="actionAboutQt">
+   <property name="text">
+    <string>About Qt</string>
+   </property>
+  </action>
+  <action name="actionSaveSplunkInstanceCredentials">
+   <property name="text">
+    <string>Save Splunk Instance Credentials</string>
+   </property>
+  </action>
+  <action name="actionRestartSplunkd">
+   <property name="text">
+    <string>Restart splunkd</string>
+   </property>
+  </action>
+  <action name="actionRefreshConfigurations">
+   <property name="text">
+    <string>Refresh Configurations</string>
+   </property>
+  </action>
+  <action name="actionChangeDeploymentServer">
+   <property name="text">
+    <string>Change Deployment Server</string>
+   </property>
+  </action>
+ </widget>
+ <tabstops>
+  <tabstop>comboAddress</tabstop>
+  <tabstop>editUsername</tabstop>
+  <tabstop>editPassword</tabstop>
+  <tabstop>buttonToggle</tabstop>
+  <tabstop>buttonPoll</tabstop>
+  <tabstop>tabWidgetMain</tabstop>
+  <tabstop>buttonRestartSplunkd</tabstop>
+  <tabstop>buttonRefreshConfigurations</tabstop>
+  <tabstop>tableMessages</tabstop>
+  <tabstop>comboConfig</tabstop>
+  <tabstop>editConfigurationFind</tabstop>
+  <tabstop>buttonConfigurationMark</tabstop>
+  <tabstop>buttonConfigurationClear</tabstop>
+  <tabstop>editConfig</tabstop>
+  <tabstop>tabWidgetInputStatus</tabstop>
+  <tabstop>tableFileStatus</tabstop>
+  <tabstop>tableTCP</tabstop>
+  <tabstop>tableUDP</tabstop>
+  <tabstop>tableModular</tabstop>
+  <tabstop>tableExec</tabstop>
+  <tabstop>tableApps</tabstop>
+  <tabstop>checkClusterDataSearchable</tabstop>
+  <tabstop>checkClusterSearchFactorMet</tabstop>
+  <tabstop>checkClusterReplicationFactorMet</tabstop>
+  <tabstop>checkClusterMaintenanceMode</tabstop>
+  <tabstop>checkClusterRollingRestartFlag</tabstop>
+  <tabstop>checkClusterInitializedFlag</tabstop>
+  <tabstop>checkClusterServiceReadyFlag</tabstop>
+  <tabstop>checkClusterIndexingReadyFlag</tabstop>
+  <tabstop>tabWidgetCluster</tabstop>
+  <tabstop>tableClusterPeers</tabstop>
+  <tabstop>tableClusterIndexes</tabstop>
+  <tabstop>tableClusterSearchHeads</tabstop>
+  <tabstop>checkSHClusterInitializedFlag</tabstop>
+  <tabstop>checkSHClusterServiceReadyFlag</tabstop>
+  <tabstop>checkSHClusterMinimumPeersJoinedFlag</tabstop>
+  <tabstop>checkSHClusterDynamicCaptain</tabstop>
+  <tabstop>checkSHClusterRollingRestartFlag</tabstop>
+  <tabstop>tableSHClusterMembers</tabstop>
+  <tabstop>tableResourceUsageProcesses</tabstop>
+  <tabstop>tableResourceUsageDisks</tabstop>
+  <tabstop>comboRestMethod</tabstop>
+  <tabstop>comboRestURI</tabstop>
+  <tabstop>editRestBodyInput</tabstop>
+  <tabstop>buttonRestSend</tabstop>
+  <tabstop>editRestResult</tabstop>
+ </tabstops>
+ <resources>
+  <include location="Z:/Python/MisnerSplunkTool/icons.qrc"/>
+ </resources>
+ <connections/>
+</ui>

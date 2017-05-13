@@ -1,0 +1,16 @@
+<RCC>
+  <qresource prefix="/">
+    <file>blank.png</file>
+    <file>managementconsole.png</file>
+    <file>favorites.png</file>
+    <file>forwarder.png</file>
+    <file>deploymentserver.png</file>
+    <file>heavyforwarder.png</file>
+    <file>indexer.png</file>
+    <file>licenseserver.png</file>
+    <file>masternode.png</file>
+    <file>searchhead.png</file>
+    <file>favorites.svg</file>
+    <file>favorites.ico</file>
+  </qresource>
+</RCC>
