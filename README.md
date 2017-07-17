@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2017.05.10  
+Misner Splunk Tool v2017.07.17
 by Joe Misner  
 http://tools.misner.net/  
 
@@ -87,6 +87,7 @@ Changelog
              renamed Cluster tab to Indexer Cluster;  
              forked Splunkd class to separate module misnersplunkdwrapper.py  
 2017.05.10 - initial public version  
+2017.07.17 - added resizable window with auto-adjusting widgets
 
 
 

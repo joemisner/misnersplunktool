@@ -38,7 +38,7 @@ from PySide import QtCore, QtGui
 from misnersplunktoolui import Ui_MainWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2017.05.10'
+__version__ = '2017.07.17'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -170,7 +170,6 @@ class MainWindow(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.setFixedSize(self.size())
         self.show()
         self.disconnect()
 
@@ -345,6 +344,63 @@ class MainWindow(QtGui.QMainWindow):
 
         # Load misnersplunktool.conf configurations
         self.pull_configs()
+
+    def resizeEvent(self, event):
+        """Resizes widgets as window size changes"""
+        # MainWindow
+        self.ui.comboAddress.resize(self.ui.centralwidget.width() - 458, self.ui.comboAddress.height())
+        self.ui.labelUsername.move(self.ui.centralwidget.width() - 389, self.ui.labelUsername.y())
+        self.ui.editUsername.move(self.ui.centralwidget.width() - 389, self.ui.editUsername.y())
+        self.ui.labelPassword.move(self.ui.centralwidget.width() - 269, self.ui.labelPassword.y())
+        self.ui.editPassword.move(self.ui.centralwidget.width() - 269, self.ui.editPassword.y())
+        self.ui.buttonToggle.move(self.ui.centralwidget.width() - 149, self.ui.buttonToggle.y())
+        self.ui.buttonPoll.move(self.ui.centralwidget.width() - 61, self.ui.buttonPoll.y())
+        self.ui.labelOS.resize(self.ui.centralwidget.width() - 608, self.ui.labelOS.height())
+        self.ui.labelSystem.resize(self.ui.centralwidget.width() - 608, self.ui.labelSystem.height())
+
+        t = self.ui.tabWidgetMain
+        t.resize(self.ui.centralwidget.width() - 18, self.ui.centralwidget.height() - 115)
+
+        # General tab
+        self.ui.boxDeployment.resize(t.width() - 290, self.ui.boxDeployment.height())
+        self.ui.labelDeploymentServer.resize(t.width() - 510, self.ui.labelDeploymentServer.height())
+        self.ui.labelClusterMaster.resize(t.width() - 510, self.ui.labelClusterMaster.height())
+        self.ui.labelSHCDeployer.resize(t.width() - 510, self.ui.labelSHCDeployer.height())
+        self.ui.boxMessages.resize(t.width() - 20, t.height() - 126)
+        self.ui.tableMessages.resize(t.width() - 40, t.height() - 156)
+
+        # Configuration tab
+        self.ui.editConfig.resize(t.width() - 20, t.height() - 70)
+
+        # Input Status tab
+        self.ui.tabWidgetInputStatus.resize(t.width() - 20, t.height() - 40)
+        self.ui.tableFileStatus.resize(t.width() - 40, t.height() - 80)
+        self.ui.tableTCP.resize(t.width() - 40, t.height() - 80)
+        self.ui.tableUDP.resize(t.width() - 40, t.height() - 80)
+        self.ui.tableModular.resize(t.width() - 40, t.height() - 80)
+        self.ui.tableExec.resize(t.width() - 40, t.height() - 80)
+
+        # Apps tab
+        self.ui.tableApps.resize(t.width() - 20, t.height() - 40)
+
+        # Indexer Cluster tab
+        self.ui.tabWidgetCluster.resize(t.width() - 20, t.height() - 110)
+        self.ui.tableClusterPeers.resize(t.width() - 40, t.height() - 150)
+        self.ui.tableClusterIndexes.resize(t.width() - 40, t.height() - 150)
+        self.ui.tableClusterSearchHeads.resize(t.width() - 40, t.height() - 150)
+
+        # Search Head Cluster tab
+        self.ui.tableSHClusterMembers.resize(t.width() - 20, t.height() - 110)
+
+        # Resource Usage tab
+        self.ui.tableResourceUsageProcesses.resize(self.ui.tableResourceUsageProcesses.width(), t.height() - 90)
+        self.ui.tableResourceUsageDisks.resize(t.width() - 380, t.height() - 90)
+
+        # REST API tab
+        self.ui.comboRestURI.resize(t.width() - 210, self.ui.comboRestURI.height())
+        self.ui.editRestBodyInput.resize(t.width() - 210, self.ui.editRestBodyInput.height())
+        self.ui.buttonRestSend.move(t.width() - 81, self.ui.buttonRestSend.y())
+        self.ui.editRestResult.resize(t.width() - 20, t.height() - 90)
 
     def statusbar_msg(self, msg):
         """Sends a message to the statusbar"""
