@@ -32,17 +32,18 @@ import socket
 import time
 import datetime
 import math
+import re
 import ConfigParser
 import splunklib.binding as binding
 from PySide import QtCore, QtGui
 from misnersplunktoolui import Ui_MainWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2017.07.17'
+__version__ = '2017.07.18'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
-CONFIG_DEFAULT = """
+CONFIG_DEFAULT = """\
 # misnersplunktool.conf -- Misner Splunk Tool configuration file
 # Place in same directory as misnersplunktool.exe to import settings
 
@@ -58,6 +59,36 @@ defaultPassword=changeme
 [endpoints]
 endpoint.0=/services/server/info
 endpoint.1=/services/server/settings
+
+# Metrics and key performance indicators used by the Health Report to identify issues
+[healthchecks]
+version_caution=6.0  # floating point version number (only major.minor version supported)
+version_warning=5.0  # floating point version number (only major.minor version supported)
+uptime_caution=604800  # seconds
+uptime_warning=86400  # seconds
+cpu_cores_caution=12  # total
+mem_capacity_caution=31744  # MB
+http_ssl_caution=true  # boolean
+messages_caution=true  # boolean
+cpu_usage_caution=80  # percent utilization
+cpu_usage_warning=90  # percent utilization
+mem_usage_caution=80  # percent utilization
+mem_usage_warning=90  # percent utilization
+swap_usage_caution=80  # percent utilization
+swap_usage_warning=90  # percent utilization
+diskpartition_usage_caution=80  # percent utilization
+diskpartition_usage_warning=90  # percent utilization
+cluster_maintenance_caution=true  # boolean
+cluster_rollingrestart_caution=true  # boolean
+cluster_alldatasearchable_warning=true  # boolean
+cluster_searchfactor_caution=true  # boolean
+cluster_replicationfactor_caution=true  # boolean
+cluster_peersnotsearchable_warning=true  # boolean
+cluster_searchheadsnotconnected_warning=true  # boolean
+shcluster_rollingrestart_caution=true  # boolean
+shcluster_serviceready_warning=true  # boolean
+shcluster_minpeersjoined_warning=true  # boolean
+shcluster_membersnotup_warning=true  # boolean
 
 # splunkd locations saved in the Address combo box
 # Create separate stanzas for each saved splunkd location, including the ip/host and management port
@@ -172,6 +203,8 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.setupUi(self)
         self.show()
         self.disconnect()
+        self.discovery_report = None
+        self.health_report = None
 
         #  General tab
         self.ui.tableMessages.setColumnWidth(0, 140)  # Time Created
@@ -179,6 +212,14 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.tableMessages.setColumnWidth(2, 150)  # Title
         self.ui.tableMessages.setColumnWidth(3, 340)  # Description
         self.ui.tableMessages.sortByColumn(0, QtCore.Qt.AscendingOrder)
+
+        #  Report tab
+        self.ui.tableDiscovery.setColumnWidth(0, 80)   # Category
+        self.ui.tableDiscovery.setColumnWidth(1, 170)  # Name
+        self.ui.tableDiscovery.setColumnWidth(2, 420)  # Value
+
+        self.ui.tableHealth.setColumnWidth(0, 80)   # Status
+        self.ui.tableHealth.setColumnWidth(1, 590)  # Description
 
         #  Configuration tab
         self.ui.labelHighlighter.setVisible(False)
@@ -293,6 +334,8 @@ class MainWindow(QtGui.QMainWindow):
         # Signals and Slots
         #  Menubar
         self.ui.actionBuildMisnersplunktoolConf.triggered.connect(self.actionBuildMisnersplunktoolConf_triggered)
+        self.ui.actionSaveDiscoveryReport.triggered.connect(self.actionSaveDiscoveryReport_triggered)
+        self.ui.actionSaveHealthReport.triggered.connect(self.actionSaveHealthReport_triggered)
         #self.ui.actionSaveSplunkInstanceCredentials.triggered.connect(
         #  self.actionSaveSplunkInstanceCredentials_triggered
         #)
@@ -312,6 +355,7 @@ class MainWindow(QtGui.QMainWindow):
         #  General tab
         self.ui.buttonRestartSplunkd.clicked.connect(self.actionRestartSplunkd_clicked)
         self.ui.buttonRefreshConfigurations.clicked.connect(self.actionRefreshConfigurations_clicked)
+        #  Report tab
         #  Configuration tab
         self.ui.comboConfig.activated.connect(self.comboConfig_activated)
         self.ui.editConfigurationFind.returnPressed.connect(self.buttonConfigurationMark_clicked)
@@ -343,7 +387,13 @@ class MainWindow(QtGui.QMainWindow):
         #self.poll_interval = POLL_INTERVAL
 
         # Load misnersplunktool.conf configurations
-        self.pull_configs()
+        try:
+            self.pull_configs()
+        except:
+            msg = "Error while pulling configurations from misnersplunktool.conf" \
+                  "Check formatting in file. If error persists, delete the file and restart."
+            self.critical_msg(msg)
+            fatal_error(msg)
 
     def resizeEvent(self, event):
         """Resizes widgets as window size changes"""
@@ -368,6 +418,11 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.labelSHCDeployer.resize(t.width() - 510, self.ui.labelSHCDeployer.height())
         self.ui.boxMessages.resize(t.width() - 20, t.height() - 126)
         self.ui.tableMessages.resize(t.width() - 40, t.height() - 156)
+
+        # Report tab
+        self.ui.tabWidgetReport.resize(t.width() - 20, t.height() - 40)
+        self.ui.tableDiscovery.resize(t.width() - 40, t.height() - 80)
+        self.ui.tableHealth.resize(t.width() - 40, t.height() - 80)
 
         # Configuration tab
         self.ui.editConfig.resize(t.width() - 20, t.height() - 70)
@@ -429,6 +484,7 @@ class MainWindow(QtGui.QMainWindow):
             if section[0:9] == 'splunkd::':
                 self.ui.comboAddress.addItem(section[9:])
 
+        # Pull REST API endpoints
         if config.has_section('endpoints'):
             endpoint_number = 0
             while config.has_option('endpoints', 'endpoint.%s' % endpoint_number):
@@ -436,6 +492,67 @@ class MainWindow(QtGui.QMainWindow):
                 self.ui.comboRestURI.addItem(uri)
                 endpoint_number += 1
 
+        def fixtype(object):
+            """Returns the object as the correct type: a boolean, integer, floating point, or string"""
+            if object.lower() == 'true':
+                return True
+            elif object.lower() == 'false':
+                return False
+            try:
+                return int(object)
+            except ValueError:
+                try:
+                    return float(object)
+                except ValueError:
+                    return str(object)
+
+        # Build health checks dictionary if defaults, in case values in configuration are not present
+        self.healthchecks = {
+            'version_caution': '6.0',
+            'version_warning': '5.0',
+            'uptime_caution': '604800',
+            'uptime_warning': '86400',
+            'cpu_cores_caution': '12',
+            'mem_capacity_caution': '31744',
+            'http_ssl_caution': 'true',
+            'messages_caution': 'true',
+            'cpu_usage_caution': '80',
+            'cpu_usage_warning': '90',
+            'mem_usage_caution': '80',
+            'mem_usage_warning': '90',
+            'swap_usage_caution': '80',
+            'swap_usage_warning': '90',
+            'diskpartition_usage_caution': '80',
+            'diskpartition_usage_warning': '90',
+            'cluster_maintenance_caution': 'true',
+            'cluster_rollingrestart_caution': 'true',
+            'cluster_alldatasearchable_warning': 'true',
+            'cluster_searchfactor_caution': 'true',
+            'cluster_replicationfactor_caution': 'true',
+            'cluster_peersnotsearchable_warning': 'true',
+            'cluster_searchheadsnotconnected_warning': 'true',
+            'shcluster_rollingrestart_caution': 'true',
+            'shcluster_serviceready_warning': 'true',
+            'shcluster_minpeersjoined_warning': 'true',
+            'shcluster_membersnotup_warning': 'true'
+        }
+
+        # Pull health check values
+        if config.has_section('healthchecks'):
+            for option in config.options('healthchecks'):
+                value = config.get('healthchecks', option)
+                try:  # Remove comments from key=value pair
+                    if '#' in value:
+                        value = re.findall(r"^([\.\w]+)\s*#.*$", value)[0]
+                except:  # Some bad formatting broke the regex parser
+                    msg = "Error while pulling configurations from misnersplunktool.conf" \
+                          "Check formatting of [%s] option %s within this file."
+                    self.critical_msg(msg)
+                    fatal_error(msg)
+
+                self.healthchecks[option] = fixtype(value.strip())
+
+        # Pull other config values
         if config.has_option('main', 'defaultAddress'):
             self.ui.comboAddress.setEditText(config.get('main', 'defaultAddress'))
         if config.has_option('main', 'defaultUsername'):
@@ -551,6 +668,9 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.labelClusterMaster.setToolTip(None)
         self.ui.labelSHCDeployer.setText('(none)')
         self.ui.labelSHCDeployer.setToolTip(None)
+        #  Report tab
+        self.ui.tableDiscovery.setRowCount(0)
+        self.ui.tableHealth.setRowCount(0)
         #  Configuration tab
         self.ui.editConfig.setText(None)
         #  Input Status tab
@@ -634,6 +754,10 @@ class MainWindow(QtGui.QMainWindow):
             self.splunkd.get_services_admin_inputstatus()
             self.statusbar_msg('Polling apps...')
             self.splunkd.poll_service_apps()
+            self.statusbar_msg('Polling data collection info...')
+            self.splunkd.get_services_data()
+            self.statusbar_msg('Polling KV store info...')
+            self.splunkd.get_services_kvstore()
             self.statusbar_msg('Polling cluster master info...')
             self.splunkd.get_services_cluster_master()
             self.statusbar_msg('Polling search head cluster info...')
@@ -720,9 +844,64 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.labelSHCDeployer.setToolTip(self.splunkd.shcluster_deployer)
         else:
             self.ui.labelSHCDeployer.setText('(none)')
-        fields = ['time_created', 'severity', 'title', 'description']
-        self.table_builder(self.ui.tableMessages, self.splunkd.messages, fields)
+        self.table_builder(
+            self.ui.tableMessages,
+            self.splunkd.messages,
+            ['time_created', 'severity', 'title', 'description']
+        )
         self.ui.tableMessages.resizeRowsToContents()
+
+        # Fill in Report tab
+        #  Report > Discovery
+        self.discovery_report = [
+            {'category': 'Server', 'name': 'Host/IP', 'value': self.splunkd.mgmt_host},
+            {'category': 'Server', 'name': 'Server Name', 'value': self.splunkd.server_name},
+            {'category': 'Server', 'name': 'GUID', 'value': self.splunkd.guid},
+            {'category': 'Server', 'name': 'Type', 'value': self.splunkd.type},
+            {'category': 'Server', 'name': 'Role', 'value': ', '.join(map(str, self.splunkd.roles))},
+            {'category': 'Server', 'name': 'Uptime', 'value': uptime},
+            {'category': 'Server', 'name': 'OS', 'value': self.splunkd.os},
+            {'category': 'Server', 'name': 'Web SSL', 'value': str(self.splunkd.http_ssl)},
+            {'category': 'Server', 'name': 'Web Enabled', 'value': str(self.splunkd.http_server)},
+            {'category': 'Ports', 'name': 'Mgmt Port', 'value': str(self.splunkd.mgmt_port)},
+            {'category': 'Ports', 'name': 'Web Port', 'value': str(self.splunkd.http_port)},
+            {'category': 'Ports', 'name': 'Receiving Ports', 'value': ', '.join(map(str, self.splunkd.receiving_ports))},
+            {'category': 'Ports', 'name': 'TCP Input Ports', 'value': ', '.join(map(str, self.splunkd.rawtcp_ports))},
+            {'category': 'Ports', 'name': 'UDP Input Ports', 'value': ', '.join(map(str, self.splunkd.udp_ports))},
+            {'category': 'Ports', 'name': 'Replication Port', 'value': str(self.splunkd.cluster_replicationport)},
+            {'category': 'Ports', 'name': 'KV Store Port', 'value': str(self.splunkd.kvstore_port)},
+            {'category': 'Resources', 'name': 'CPU Cores', 'value': str(self.splunkd.cores)},
+            {'category': 'Resources', 'name': 'RAM (MB)', 'value': str(self.splunkd.ram)},
+            {'category': 'Resources', 'name': 'CPU Usage', 'value': str(self.splunkd.cpu_usage) + '%'},
+            {'category': 'Resources', 'name': 'RAM Usage', 'value': str(self.splunkd.mem_usage) + '%'},
+            {'category': 'Resources', 'name': 'Swap Usage', 'value': str(self.splunkd.swap_usage) + '%'},
+            {'category': 'Resources', 'name': 'Disks', 'value': ', '.join(map(str, self.splunkd.disk_partitions))},
+            {'category': 'Deployment', 'name': 'Client of Deployment Server', 'value': self.splunkd.deployment_server},
+            {'category': 'Deployment', 'name': 'Cluster Master', 'value': self.ui.labelClusterMaster.text()},
+            {'category': 'Deployment', 'name': 'Fetch from SHC Deployer', 'value': self.ui.labelSHCDeployer.text()},
+            {'category': 'Cluster', 'name': 'IC Label', 'value': self.splunkd.cluster_label},
+            {'category': 'Cluster', 'name': 'IC Mode', 'value': self.splunkd.cluster_mode},
+            {'category': 'Cluster', 'name': 'IC Site', 'value': self.splunkd.cluster_site},
+            {'category': 'Cluster', 'name': 'IC Rep Factor', 'value': str(self.splunkd.cluster_replicationfactor)},
+            {'category': 'Cluster', 'name': 'IC Search Factor', 'value': str(self.splunkd.cluster_searchfactor)},
+            {'category': 'Cluster', 'name': 'SHC Label', 'value': self.splunkd.shcluster_label},
+            {'category': 'Cluster', 'name': 'SHC Rep Factor', 'value': str(self.splunkd.shcluster_replicationfactor)},
+            {'category': 'Counts', 'name': 'Messages', 'value': str(len(self.splunkd.messages))},
+            {'category': 'Counts', 'name': 'Apps', 'value': str(len(self.splunkd.apps))}
+        ]
+        self.table_builder(
+            self.ui.tableDiscovery,
+            self.discovery_report,
+            ['category', 'name', 'value'],
+            sorting=False
+        )
+        #  Report > Health
+        self.health_check()
+        self.table_builder(
+            self.ui.tableHealth,
+            self.health_report,
+            ['status', 'description']
+        )
 
         # Fill in Configuration tab
         self.ui.comboConfig.clear()
@@ -732,35 +911,53 @@ class MainWindow(QtGui.QMainWindow):
 
         # Fill in Input Status tab
         #  Input Status > File Status
-        fields = ['location', 'type', 'percent', 'position', 'size', 'parent']
-        self.table_builder(self.ui.tableFileStatus, self.splunkd.fileinput_status, fields)
+        self.table_builder(
+            self.ui.tableFileStatus,
+            self.splunkd.fileinput_status,
+            ['location', 'type', 'percent', 'position', 'size', 'parent']
+        )
 
         #  Input Status > TCP
-        tcpmonitors = []
+        tcp_monitors = []
         for monitor in self.splunkd.rawtcp_status:
             monitor['tcptype'] = 'Raw'
-            tcpmonitors.append(monitor)
+            tcp_monitors.append(monitor)
         for monitor in self.splunkd.cookedtcp_status:
             monitor['tcptype'] = 'Cooked'
-            tcpmonitors.append(monitor)
-        fields = ['tcptype', 'port', 'source', 'opened']
-        self.table_builder(self.ui.tableTCP, tcpmonitors, fields)
+            tcp_monitors.append(monitor)
+        self.table_builder(
+            self.ui.tableTCP,
+            tcp_monitors,
+            ['tcptype', 'port', 'source', 'opened']
+        )
 
         #  Input Status > UDP
-        fields = ['source']
-        self.table_builder(self.ui.tableUDP, self.splunkd.udphosts_status, fields)
+        self.table_builder(
+            self.ui.tableUDP,
+            self.splunkd.udphosts_status,
+            ['source']
+        )
 
         #  Input Status > Modular
-        fields = ['location', 'exit_desc', 'opened', 'closed', 'bytes']
-        self.table_builder(self.ui.tableModular, self.splunkd.modularinput_status, fields)
+        self.table_builder(
+            self.ui.tableModular,
+            self.splunkd.modularinput_status,
+            ['location', 'exit_desc', 'opened', 'closed', 'bytes']
+        )
 
         #  Input Status > Exec
-        fields = ['location', 'exit_desc', 'opened', 'closed', 'bytes']
-        self.table_builder(self.ui.tableExec, self.splunkd.execinput_status, fields)
+        self.table_builder(
+            self.ui.tableExec,
+            self.splunkd.execinput_status,
+            ['location', 'exit_desc', 'opened', 'closed', 'bytes']
+        )
 
         # Fill in Apps tab
-        fields = ['disabled', 'title', 'version', 'label', 'description']
-        self.table_builder(self.ui.tableApps, self.splunkd.apps, fields)
+        self.table_builder(
+            self.ui.tableApps,
+            self.splunkd.apps,
+            ['disabled', 'title', 'version', 'label', 'description']
+        )
 
         # Fill in Indexer Cluster tab
         self.checkCluster_clicked()
@@ -777,16 +974,25 @@ class MainWindow(QtGui.QMainWindow):
                                                       % (self.splunkd.cluster_searchheads_connected,
                                                          len(self.splunkd.cluster_searchheads)))
 
-            fields = ['name', 'site', 'is_searchable', 'status', 'buckets', 'location', 'last_heartbeat',
+            self.table_builder(
+                self.ui.tableClusterPeers,
+                self.splunkd.cluster_peers,
+                ['name', 'site', 'is_searchable', 'status', 'buckets', 'location', 'last_heartbeat',
                       'replication_port', 'base_gen_id', 'guid']
-            self.table_builder(self.ui.tableClusterPeers, self.splunkd.cluster_peers, fields)
+            )
 
-            fields = ['name', 'is_searchable', 'searchable_data_copies', 'replicated_data_copies',
+            self.table_builder(
+                self.ui.tableClusterIndexes,
+                self.splunkd.cluster_indexes,
+                ['name', 'is_searchable', 'searchable_data_copies', 'replicated_data_copies',
                       'buckets', 'cumulative_data_size']
-            self.table_builder(self.ui.tableClusterIndexes, self.splunkd.cluster_indexes, fields)
+            )
 
-            fields = ['name', 'site', 'status', 'location', 'guid']
-            self.table_builder(self.ui.tableClusterSearchHeads, self.splunkd.cluster_searchheads, fields)
+            self.table_builder(
+                self.ui.tableClusterSearchHeads,
+                self.splunkd.cluster_searchheads,
+                ['name', 'site', 'status', 'location', 'guid']
+            )
 
         # Fill in Search Head Cluster tab
         self.checkSHCluster_clicked()
@@ -794,9 +1000,12 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.labelSHClusterCaptain.setText(self.splunkd.shcluster_captainlabel)
             self.ui.labelSHClusterCaptainElected.setText(self.splunkd.shcluster_electedcaptain)
 
-            fields = ['label', 'site', 'status', 'artifacts', 'host_port_pair', 'last_heartbeat', 'replication_port',
+            self.table_builder(
+                self.ui.tableSHClusterMembers,
+                self.splunkd.shcluster_members,
+                ['label', 'site', 'status', 'artifacts', 'host_port_pair', 'last_heartbeat', 'replication_port',
                       'restart_required', 'guid']
-            self.table_builder(self.ui.tableSHClusterMembers, self.splunkd.shcluster_members, fields)
+            )
 
         # Fill in Resource Usage tab
         if self.splunkd.cpu_usage:
@@ -813,18 +1022,115 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.labelResourceUsageSwap.setText('%.1f / %.1f GB' % (float(self.splunkd.swap_used) / 1024,
                                                                        float(self.splunkd.swap) / 1024))
         if self.splunkd.splunk_processes:
-            fields = ['name', 'pid', 'parent_pid', 'cpu', 'mem', 'args']
-            self.table_builder(self.ui.tableResourceUsageProcesses, self.splunkd.splunk_processes, fields)
+            self.table_builder(
+                self.ui.tableResourceUsageProcesses,
+                self.splunkd.splunk_processes,
+                ['name', 'pid', 'parent_pid', 'cpu', 'mem', 'args']
+            )
         if self.splunkd.disk_partitions:
-            fields = ['name', 'type', 'used', 'total']
-            self.table_builder(self.ui.tableResourceUsageDisks, self.splunkd.disk_partitions, fields)
+            self.table_builder(
+                self.ui.tableResourceUsageDisks,
+                self.splunkd.disk_partitions,
+                ['name', 'type', 'used', 'total']
+            )
 
         # Update status bar with latest poll
         current_local = time.strftime("%m/%d/%Y %I:%M:%S %p", time.localtime())
         self.statusbar_msg("Last poll completed %s" % current_local)
 
+    def health_check(self):
+        self.health_report = []
+        # Splunk version health checks
+        if self.splunkd.version:
+            minor_version = float(self.splunkd.version.split('.')[0] + '.' + self.splunkd.version.split('.')[1])
+            if minor_version <= self.healthchecks['version_warning']:
+                self.health_report.append({'status': 'Warning', 'description': "Splunkd version is %s" % self.splunkd.version})
+            elif minor_version <= self.healthchecks['version_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Splunkd version is %s" % self.splunkd.version})
+
+        # Splunk uptime health checks
+        if self.splunkd.startup_time:
+            uptime_seconds = int(time.time()) - self.splunkd.startup_time
+            uptime_formatted = pretty_time_delta(uptime_seconds)
+            if uptime_seconds < self.healthchecks['uptime_warning']:
+                self.health_report.append({'status': 'Warning', 'description': "Splunkd uptime is %s" % uptime_formatted})
+            elif uptime_seconds < self.healthchecks['uptime_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Splunkd uptime is %s" % uptime_formatted})
+
+        # Splunk Enterprise resource health checks
+        if self.splunkd.product == 'enterprise':
+            if self.splunkd.cores and self.splunkd.cores < self.healthchecks['cpu_cores_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "System has %s CPU cores" % self.splunkd.cores})
+            if self.splunkd.ram and self.splunkd.ram < self.healthchecks['mem_capacity_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "System has %s memory capacity" % self.splunkd.ram})
+            if not self.splunkd.http_ssl and self.healthchecks['http_ssl_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "HTTP SSL is not enabled"})
+            if self.splunkd.cpu_usage and self.splunkd.cpu_usage >= self.healthchecks['cpu_usage_warning']:
+                self.health_report.append({'status': 'Warning', 'description': "CPU utilization is %d%%" % self.splunkd.cpu_usage})
+            elif self.splunkd.cpu_usage and self.splunkd.cpu_usage >= self.healthchecks['cpu_usage_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "CPU utilization is %d%%" % self.splunkd.cpu_usage})
+            if self.splunkd.mem_usage and self.splunkd.mem_usage >= self.healthchecks['mem_usage_warning']:
+                self.health_report.append({'status': 'Warning', 'description': "Memory utilization is %d%%" % self.splunkd.mem_usage})
+            elif self.splunkd.mem_usage and self.splunkd.mem_usage >= self.healthchecks['mem_usage_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Memory utilization is %d%%" % self.splunkd.mem_usage})
+            if self.splunkd.swap_usage and self.splunkd.swap_usage >= self.healthchecks['swap_usage_warning']:
+                self.health_report.append({'status': 'Warning', 'description': "Swap utilization is %d%%" % self.splunkd.swap_usage})
+            elif self.splunkd.swap_usage and self.splunkd.swap_usage >= self.healthchecks['swap_usage_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Swap utilization is %d%%" % self.splunkd.swap_usage})
+            if self.splunkd.disk_partitions:
+                for mount in self.splunkd.disk_partitions:
+                    name = mount['name']
+                    percent_used = float(mount['used'][:-1])
+                    if percent_used >= self.healthchecks['diskpartition_usage_warning']:
+                        self.health_report.append({'status': 'Warning', 'description': "Disk utilization %i%% on mount '%s'" % (percent_used, name)})
+                    elif percent_used >= self.healthchecks['diskpartition_usage_caution']:
+                        self.health_report.append({'status': 'Caution', 'description': "Disk utilization %i%% on mount '%s'" % (percent_used, name)})
+
+        # Splunk messages health checks
+        if self.splunkd.messages and self.healthchecks['messages_caution']:
+            for message in self.splunkd.messages:
+                self.health_report.append({'status': 'Caution', 'description': "Splunkd message: %s" % message})
+
+        # Splunk indexer cluster health checks
+        if 'cluster_master' in self.splunkd.roles:
+            if self.splunkd.cluster_maintenance and self.healthchecks['cluster_maintenance_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Cluster in maintenance mode"})
+            if self.splunkd.cluster_rollingrestart and self.healthchecks['cluster_rollingrestart_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Cluster in rolling restart"})
+            if self.splunkd.cluster_alldatasearchable is False and self.healthchecks['cluster_alldatasearchable_warning']:
+                self.health_report.append({'status': 'Warning', 'description': "Cluster data is not all searchable"})
+            if self.splunkd.cluster_searchfactormet is False and self.healthchecks['cluster_searchfactor_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Cluster search factor is not met"})
+            if self.splunkd.cluster_replicationfactormet is False and self.healthchecks['cluster_replicationfactor_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Cluster replication factor is not met"})
+            if self.splunkd.cluster_peers:
+                if self.splunkd.cluster_peers_searchable < self.splunkd.cluster_peers and self.healthchecks['cluster_peersnotsearchable_warning']:
+                    self.health_report.append({'status': 'Warning', 'description': "%s of %s cluster peer(s) are not searchable"
+                               % (self.splunkd.cluster_peers - self.splunkd.cluster_peers_searchable, self.splunkd.cluster_peers)})
+            if self.splunkd.cluster_searchheads:
+                if self.splunkd.cluster_searchheads_connected < self.splunkd.cluster_searchheads and self.healthchecks['cluster_searchheadsnotconnected_warning']:
+                    self.health_report.append({'status': 'Warning', 'description': "%s of %s search heads(s) are not connected"
+                               % (self.splunkd.cluster_searchheads - self.splunkd.cluster_searchheads_connected,
+                                  self.splunkd.cluster_searchheads)})
+
+        # Splunk search head cluster health checks
+        if 'shc_member' in self.splunkd.roles:
+            if self.splunkd.shcluster_rollingrestart and self.healthchecks['shcluster_rollingrestart_caution']:
+                self.health_report.append({'status': 'Caution', 'description': "Search head cluster in rolling restart"})
+            if self.splunkd.shcluster_serviceready is False and self.healthchecks['shcluster_serviceready_warning']:
+                self.health_report.append({'status': 'Warning', 'description': "Search head cluster service is not ready"})
+            if self.splunkd.shcluster_minpeersjoined is False and self.healthchecks['shcluster_minpeersjoined_warning']:
+                self.health_report.append({'status': 'Warning', 'description': "Search head cluster does not have minimum peers joined"})
+            if self.splunkd.shcluster_members:
+                if self.splunkd.shcluster_members_up < self.splunkd.shcluster_members and self.healthchecks['shcluster_membersnotup_warning']:
+                    self.health_report.append({'status': 'Warning', 'description': "%s of %s search head cluster member(s) are not in up status"
+                               % (self.splunkd.shcluster_members - self.splunkd.shcluster_members_up, self.splunkd.shcluster_members)})
+
+        if not len(self.health_report):
+            self.health_report.append({'status': 'OK', 'description': "All health checks passed"})
+
     @staticmethod
-    def table_builder(table, collection, fields):
+    def table_builder(table, collection, fields, sorting=True):
         table.setRowCount(0)
         table.setRowCount(len(collection))
         table.setSortingEnabled(False)  # Fixes bug where rows don't repopulate after a sort
@@ -836,9 +1142,11 @@ class MainWindow(QtGui.QMainWindow):
                 table.item(row, column).setText(entry[field])
                 column += 1
             row += 1
-        table.setSortingEnabled(True)  # Fixes bug where rows don't repopulate after a sort
+        if sorting:
+            table.setSortingEnabled(True)  # Fixes bug where rows don't repopulate after a sort
 
     # Qt slots
+
     def actionBuildMisnersplunktoolConf_triggered(self):
         """File > Configuration > Build misnersplunktool.conf"""
         filename = config_file.replace('/', '\\')
@@ -849,6 +1157,68 @@ class MainWindow(QtGui.QMainWindow):
                     f.write(CONFIG_DEFAULT)
             except:
                 self.warning_msg("Unable to write default configuration to '%s'" % filename)
+
+    def actionSaveDiscoveryReport_triggered(self):
+        """File > Save > Discovery Report"""
+        # Throw an error if we haven't successfully connected to a Splunk instance yet
+        if not self.discovery_report:
+            self.warning_msg("No collected data to print.")
+            return
+
+        current_local = time.strftime("%m/%d/%Y %I:%M:%S %p", time.localtime())
+        filename, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Discovery Report", SCRIPT_DIR,
+                                                        "CSV (Comma delimited) (*.csv);;All Files (*.*)")
+        try:
+            # Built report text
+            report = ""
+            report += "# Misner Splunk Tool v%s by Joe Misner - http://tools.misner.net/\n" % __version__
+            report += "# Discovery Report produced %s\n" % current_local
+            report += "Category,Name,Value\n"
+            for entry in self.discovery_report:
+                report += "%s,%s,%s\n" % (entry['category'], entry['name'], str(entry['value']).replace(',', ';'))
+
+            # Save file
+            with open(filename, 'w') as f:
+                f.write(report)
+            self.information_msg("Discovery Report saved to location:\n%s" % filename)
+        except:
+            self.warning_msg("Exception while building report.")
+
+    def actionSaveHealthReport_triggered(self):
+        """File > Save > Health Report"""
+        # Throw an error if we haven't successfully connected to a Splunk instance yet
+        if not self.health_report:
+            self.warning_msg("No collected data to print.")
+            return
+
+        current_local = time.strftime("%m/%d/%Y %I:%M:%S %p", time.localtime())
+        filename, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Health Report", SCRIPT_DIR,
+                                                        "CSV (Comma delimited) (*.csv);;All Files (*.*)")
+        try:
+            # Built report text
+            report = ""
+            report += "# Misner Splunk Tool v%s by Joe Misner - http://tools.misner.net/\n" % __version__
+            report += "# Health Report produced %s\n" % current_local
+            report += "Status,Description\n"
+            for entry in self.health_report:
+                report += "%s,%s\n" % (entry['status'], str(entry['description']).replace(',', ';'))
+
+            # Save file
+            with open(filename, 'w') as f:
+                f.write(report)
+            self.information_msg("Health Report saved to location:\n%s" % filename)
+        except:
+            self.warning_msg("Exception while building report.")
+
+    def actionSaveCurrentTab_triggered(self):
+        """File > Save > Current Tab"""
+        # TO-DO: Implement save or print function for current tab
+        current_tab = self.ui.tabWidgetMain.tabText(self.ui.tabWidgetMain.currentIndex())
+        if current_tab == "Report":
+            if not self.discovery_report:
+                self.warning_msg("No collected data to print.")
+        else:
+            self.warning_msg("Printing functionality not created for currently selected tab.")
 
     def actionSaveSplunkInstanceCredentials_triggered(self):
         """File > Configuration > Save Splunk Instance Credentials"""
@@ -1122,10 +1492,17 @@ if __name__ == '__main__':
     # Pull available configs from misnertraptool.conf
     config = ConfigParser.ConfigParser(allow_no_value=True)
     config_file = os.path.join(SCRIPT_DIR, CONFIG_FILENAME)
-    if os.path.isfile(config_file):
+    if os.path.isfile(config_file):  # Read in configuration file if it exists
         try:
             config.read(config_file)
         except ConfigParser.ParsingError, e:
+            pass
+    else:  # If configuration file is missing, build a default file
+        try:
+            with open(config_file, 'w') as f:
+                f.write(CONFIG_DEFAULT)
+            config.read(config_file)
+        except:
             pass
 
     # PySide GUI

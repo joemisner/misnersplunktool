@@ -1,5 +1,5 @@
 #define MyAppName "Misner Splunk Tool"
-#define MyAppVersion "2017.05.10"
+#define MyAppVersion "2017.07.18"
 #define MyAppPublisher "Joe Misner"
 #define MyAppURL "http://tools.misner.net/"
 #define MyAppExeName "misnersplunktool.exe"
@@ -18,7 +18,7 @@ DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 LicenseFile=dist\Misner Splunk Tool\LICENSE.txt
 OutputDir=.
-OutputBaseFilename=Setup_MisnerSplunkTool_20170510
+OutputBaseFilename=Setup_MisnerSplunkTool_20170718
 Compression=lzma
 SolidCompression=yes
 

@@ -26,6 +26,7 @@ Dependencies:
 Changelog:
 2017.02.25 - initial version, forked from misnersplunktool.py
 2017.05.10 - initial public version
+2017.07.18 - added REST captures of data input ports and additional cluster values
 """
 
 import re
@@ -37,7 +38,7 @@ import splunklib.client as client
 import splunklib.data as data
 import splunklib.results as results
 
-__version__ = '2017.05.10'
+__version__ = '2017.07.18'
 
 SPLUNK_HOST = 'localhost'
 SPLUNK_PORT = 8089
@@ -401,12 +402,68 @@ class Splunkd:
         except KeyError:
             pass  # No app entries
 
+    def get_services_data(self):
+        """GET /services/data/*"""
+        self.receiving_ports = []
+        try:
+            self._services_data_inputs_tcp_cooked = self.rest_call('/services/data/inputs/tcp/cooked', count=-1)
+            ports = self._services_data_inputs_tcp_cooked['feed']['entry']
+            if type(ports) is not list: ports = [ports]
+            for port in ports:
+                self.receiving_ports.append(int(port['title']))
+        except:
+            self._services_data_inputs_tcp_cooked = None
+
+        self.rawtcp_ports = []
+        try:
+            self._services_data_inputs_tcp_raw = self.rest_call('/services/data/inputs/tcp/raw', count=-1)
+            ports = self._services_data_inputs_tcp_raw['feed']['entry']
+            if type(ports) is not list: ports = [ports]
+            for port in ports:
+                self.rawtcp_ports.append(int(port['title']))
+        except:
+            self._services_data_inputs_tcp_raw = None
+
+        self.udp_ports = []
+        try:
+            self._services_data_inputs_udp = self.rest_call('/services/data/inputs/udp', count=-1)
+            ports = self._services_data_inputs_udp['feed']['entry']
+            if type(ports) is not list: ports = [ports]
+            for port in ports:
+                self.udp_ports.append(int(port['title']))
+        except:
+            self._services_data_inputs_udp = None
+
+    def get_services_kvstore(self):
+        """GET /services/kvstore/*"""
+        try:
+            self._services_kvstore_status = self.rest_call('/services/kvstore/status', count=-1)
+            status_current = self._services_kvstore_status['feed']['entry']['content']['current']
+            self.kvstore_port = int(status_current['port'])
+        except:
+            self._services_data_inputs_tcp_cooked = None
+            self.kvstore_port = False
+
     def get_services_cluster_master(self):
         """GET /services/cluster/*"""
         try:
             self._services_cluster_config = self.rest_call('/services/cluster/config', count=-1)
             cluster_config = self._services_cluster_config['feed']['entry']['content']
             self.cluster_mode = cluster_config['mode']
+            self.cluster_site = cluster_config['site']
+            self.cluster_label = cluster_config['cluster_label']
+            try:
+                self.cluster_replicationport = int(cluster_config['replication_port'])
+            except:
+                self.cluster_replicationport = None
+            try:
+                self.cluster_replicationfactor = int(cluster_config['replication_factor'])
+            except:
+                self.cluster_replicationfactor = None
+            try:
+                self.cluster_searchfactor = int(cluster_config['search_factor'])
+            except:
+                self.cluster_searchfactor = None
 
             # Get list of cluster master nodes and parse for host:port values
             resolved_masteruri = ''
@@ -421,8 +478,13 @@ class Splunkd:
             self.cluster_master_uri = resolved_masteruri[:-2]  # Save, excluding final comma and space
         except:
             self._services_cluster_config = None
-            self.cluster_master_uri = False
-            self.cluster_mode = False
+            self.cluster_master_uri = None
+            self.cluster_mode = None
+            self.cluster_site = None
+            self.cluster_label = None
+            self.cluster_replicationport = None
+            self.cluster_replicationfactor = None
+            self.cluster_searchfactor = None
 
         try:
             self._services_shcluster_conf_deploy_fetch_url =\
@@ -570,6 +632,24 @@ class Splunkd:
 
     def get_services_shcluster(self):
         """GET /services/shcluster/*"""
+        try:
+            self._services_shcluster_config = self.rest_call('/services/shcluster/config', count=-1)
+            shcluster_config = self._services_shcluster_config['feed']['entry']['content']
+            self.shcluster_label = shcluster_config['shcluster_label']
+            try:
+                self.shcluster_replicationport = int(shcluster_config['replication_port'])
+            except:
+                self.shcluster_replicationport = None
+            try:
+                self.shcluster_replicationfactor = int(shcluster_config['replication_factor'])
+            except:
+                self.shcluster_replicationfactor = None
+        except:
+            self._services_shcluster_config = None
+            self.shcluster_label = None
+            self.shcluster_replicationport = None
+            self.shcluster_replicationfactor = None
+
         try:
             self._services_shcluster_status = self.rest_call('/services/shcluster/status', count=-1)
             captain = self._services_shcluster_status['feed']['entry']['content']['captain']

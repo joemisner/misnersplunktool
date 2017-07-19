@@ -398,6 +398,115 @@ required:</string>
       </widget>
      </widget>
     </widget>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Report</string>
+     </attribute>
+     <widget class="QTabWidget" name="tabWidgetReport">
+      <property name="geometry">
+       <rect>
+        <x>8</x>
+        <y>9</y>
+        <width>711</width>
+        <height>381</height>
+       </rect>
+      </property>
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="tabInputStatusFileStatus_2">
+       <attribute name="title">
+        <string>Discovery</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableDiscovery">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>341</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="columnCount">
+         <number>3</number>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Category</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Name</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Value</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="tabInputStatusTCP_2">
+       <attribute name="title">
+        <string>Health</string>
+       </attribute>
+       <widget class="QTableWidget" name="tableHealth">
+        <property name="geometry">
+         <rect>
+          <x>7</x>
+          <y>10</y>
+          <width>691</width>
+          <height>341</height>
+         </rect>
+        </property>
+        <property name="editTriggers">
+         <set>QAbstractItemView::NoEditTriggers</set>
+        </property>
+        <property name="horizontalScrollMode">
+         <enum>QAbstractItemView::ScrollPerPixel</enum>
+        </property>
+        <property name="columnCount">
+         <number>2</number>
+        </property>
+        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+         <bool>true</bool>
+        </attribute>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+        <attribute name="verticalHeaderDefaultSectionSize">
+         <number>20</number>
+        </attribute>
+        <column>
+         <property name="text">
+          <string>Status</string>
+         </property>
+        </column>
+        <column>
+         <property name="text">
+          <string>Description</string>
+         </property>
+        </column>
+       </widget>
+      </widget>
+     </widget>
+    </widget>
     <widget class="QWidget" name="tabConfiguration">
      <attribute name="title">
       <string>Configuration</string>
@@ -1428,7 +1537,7 @@ required:</string>
     </widget>
     <widget class="QWidget" name="tabSHCluster">
      <attribute name="title">
-      <string>Search Head Cluster</string>
+      <string>SH Cluster</string>
      </attribute>
      <widget class="QCheckBox" name="checkSHClusterDynamicCaptain">
       <property name="geometry">
@@ -2626,7 +2735,15 @@ required:</string>
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuSave">
+     <property name="title">
+      <string>Save</string>
+     </property>
+     <addaction name="actionSaveDiscoveryReport"/>
+     <addaction name="actionSaveHealthReport"/>
+    </widget>
     <addaction name="actionBuildMisnersplunktoolConf"/>
+    <addaction name="menuSave"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -2717,6 +2834,26 @@ required:</string>
   <action name="actionChangeDeploymentServer">
    <property name="text">
     <string>Change Deployment Server</string>
+   </property>
+  </action>
+  <action name="actionInstance">
+   <property name="text">
+    <string>Instance</string>
+   </property>
+  </action>
+  <action name="actionDeployment">
+   <property name="text">
+    <string>Deployment</string>
+   </property>
+  </action>
+  <action name="actionSaveDiscoveryReport">
+   <property name="text">
+    <string>Discovery Report</string>
+   </property>
+  </action>
+  <action name="actionSaveHealthReport">
+   <property name="text">
+    <string>Health Report</string>
    </property>
   </action>
  </widget>
