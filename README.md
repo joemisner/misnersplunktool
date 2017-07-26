@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2017.07.18
+Misner Splunk Tool v2017.07.26  
 by Joe Misner  
 http://tools.misner.net/  
 
@@ -90,6 +90,9 @@ Changelog
 2017.07.17 - added resizable window with auto-adjusting widgets  
 2017.07.18 - added Report tab, containing Discovery and Health reports;  
              added File > Save functionality, currently for saving reports to CSV  
+2017.07.26 - updated health report to display metric status even when not in alarm;  
+             modified Report tab, combining Discovery and Health report functionality;  
+			 modified Save Report to use current datetime and server name as default filename  
 
 
 

@@ -2,6 +2,8 @@ Misner Splunk Tool
 Copyright (C) 2015-2017 Joe Misner <joe@misner.net>
 http://tools.misner.net/
 
+Splunk is a trademark of Splunk Inc. in the United States and other countries.
+
 This copy of Misner Splunk Tool is licensed under the following terms:
 
                     GNU GENERAL PUBLIC LICENSE

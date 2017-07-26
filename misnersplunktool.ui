@@ -30,7 +30,7 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>10</x>
+      <x>7</x>
       <y>110</y>
       <width>731</width>
       <height>421</height>
@@ -402,109 +402,53 @@ required:</string>
      <attribute name="title">
       <string>Report</string>
      </attribute>
-     <widget class="QTabWidget" name="tabWidgetReport">
+     <widget class="QTableWidget" name="tableReport">
       <property name="geometry">
        <rect>
-        <x>8</x>
+        <x>7</x>
         <y>9</y>
         <width>711</width>
         <height>381</height>
        </rect>
       </property>
-      <property name="currentIndex">
-       <number>0</number>
+      <property name="editTriggers">
+       <set>QAbstractItemView::NoEditTriggers</set>
       </property>
-      <widget class="QWidget" name="tabInputStatusFileStatus_2">
-       <attribute name="title">
-        <string>Discovery</string>
-       </attribute>
-       <widget class="QTableWidget" name="tableDiscovery">
-        <property name="geometry">
-         <rect>
-          <x>7</x>
-          <y>10</y>
-          <width>691</width>
-          <height>341</height>
-         </rect>
-        </property>
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
-        </property>
-        <property name="horizontalScrollMode">
-         <enum>QAbstractItemView::ScrollPerPixel</enum>
-        </property>
-        <property name="columnCount">
-         <number>3</number>
-        </property>
-        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-         <bool>true</bool>
-        </attribute>
-        <attribute name="verticalHeaderVisible">
-         <bool>false</bool>
-        </attribute>
-        <attribute name="verticalHeaderDefaultSectionSize">
-         <number>20</number>
-        </attribute>
-        <column>
-         <property name="text">
-          <string>Category</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Name</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Value</string>
-         </property>
-        </column>
-       </widget>
-      </widget>
-      <widget class="QWidget" name="tabInputStatusTCP_2">
-       <attribute name="title">
-        <string>Health</string>
-       </attribute>
-       <widget class="QTableWidget" name="tableHealth">
-        <property name="geometry">
-         <rect>
-          <x>7</x>
-          <y>10</y>
-          <width>691</width>
-          <height>341</height>
-         </rect>
-        </property>
-        <property name="editTriggers">
-         <set>QAbstractItemView::NoEditTriggers</set>
-        </property>
-        <property name="horizontalScrollMode">
-         <enum>QAbstractItemView::ScrollPerPixel</enum>
-        </property>
-        <property name="columnCount">
-         <number>2</number>
-        </property>
-        <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
-         <bool>true</bool>
-        </attribute>
-        <attribute name="verticalHeaderVisible">
-         <bool>false</bool>
-        </attribute>
-        <attribute name="verticalHeaderDefaultSectionSize">
-         <number>20</number>
-        </attribute>
-        <column>
-         <property name="text">
-          <string>Status</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Description</string>
-         </property>
-        </column>
-       </widget>
-      </widget>
+      <property name="horizontalScrollMode">
+       <enum>QAbstractItemView::ScrollPerPixel</enum>
+      </property>
+      <property name="columnCount">
+       <number>4</number>
+      </property>
+      <attribute name="horizontalHeaderShowSortIndicator" stdset="0">
+       <bool>true</bool>
+      </attribute>
+      <attribute name="verticalHeaderVisible">
+       <bool>false</bool>
+      </attribute>
+      <attribute name="verticalHeaderDefaultSectionSize">
+       <number>20</number>
+      </attribute>
+      <column>
+       <property name="text">
+        <string>Category</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Name</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Status</string>
+       </property>
+      </column>
+      <column>
+       <property name="text">
+        <string>Value</string>
+       </property>
+      </column>
      </widget>
     </widget>
     <widget class="QWidget" name="tabConfiguration">
@@ -2735,15 +2679,8 @@ required:</string>
     <property name="title">
      <string>File</string>
     </property>
-    <widget class="QMenu" name="menuSave">
-     <property name="title">
-      <string>Save</string>
-     </property>
-     <addaction name="actionSaveDiscoveryReport"/>
-     <addaction name="actionSaveHealthReport"/>
-    </widget>
     <addaction name="actionBuildMisnersplunktoolConf"/>
-    <addaction name="menuSave"/>
+    <addaction name="actionSaveReport"/>
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
@@ -2854,6 +2791,11 @@ required:</string>
   <action name="actionSaveHealthReport">
    <property name="text">
     <string>Health Report</string>
+   </property>
+  </action>
+  <action name="actionSaveReport">
+   <property name="text">
+    <string>Save Report</string>
    </property>
   </action>
  </widget>
