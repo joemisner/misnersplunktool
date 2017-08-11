@@ -441,7 +441,7 @@ required:</string>
       </column>
       <column>
        <property name="text">
-        <string>Status</string>
+        <string>Health</string>
        </property>
       </column>
       <column>

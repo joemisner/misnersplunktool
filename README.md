@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2017.07.26  
+Misner Splunk Tool v2017.08.11
 by Joe Misner  
 http://tools.misner.net/  
 
@@ -65,34 +65,183 @@ c:\Python27\python.exe -O c:\Python27\Scripts\pyinstaller.exe misnersplunktool.s
 
 
 
+Usage
+-----
+
+### Configuration ###
+
+Configuration values for the Misner Splunk Tool are stored in the file
+`misnersplunktool.conf` located in the installation directory of this
+tool. This file is similar in formatting to Splunk configuration files,
+and contains instructions on values that may be changed from defaults.
+This includes listing multiple Splunkd instances and their credentials,
+default REST API endpoints, and health check metrics that will show as
+Caution or Warning in the Report tab.
+
+If this file is missing on startup, a default file will be created. To
+reset values back to defaults, choose the "File > Build
+misnersplunktool.conf" menu option.
+
+### Tools ###
+
+The "Tools" menu contains the following options:
+
+**Restart splunkd**
+
+Instructs the Splunk daemon to restart. Similar to executing the Splunk
+CLI `restart` command.
+
+**Refresh Configurations**
+
+Mimics the script executed when visiting the `/debug/refresh` URI on
+this Splunk instance's web server. When used, this function will execute
+all endpoints with `_reload` links, and return similar output to the
+above URI.
+
+Only works on Splunk Enterprise instances.
+
+**Change Deployment Server**
+
+This is useful for remote Universal Forwarder installations, allowing
+you to enable the deployment client, change the deployment server URI,
+and restart splunkd on the current instance.
+
+### Tabs ###
+
+This tool is divided into multiple tabs, each with a corresponding
+feature:
+
+**General**
+
+High-level overview of this Splunk instance, including process controls,
+deployment information, and current messages.
+
+**Report**
+
+Gathers polled values into a report that contains discovery and health
+information on a single table. Health values are determined by the
+metrics listed in the configuration file, or defaults if not defined.
+This table can be exported to CSV by going to the "File > Save Report"
+menu.
+
+See the `misnersplunktool.conf` configuration to make changes to values
+that flag a value into Caution or Warning status.
+
+**Configuration**
+
+Contains a dropdown for selecting a Splunk configuration file, polled
+using the `/services/properties` REST API endpoint. This endpoint by
+experience returns values that closely resembles the Splunk CLI `btool`.
+Choosing a configuration in the dropdown immediately polls the instance
+for the current running configurations, not just the startup
+configurations listed in the .conf file on disk.
+
+**Input Status**
+
+Pulls data from the `/services/admin/inputstatus` REST API endpoint and
+filters the results into sorted tables. Eases troubleshooting in
+locating faults during onboarding and analysis of ingested data on
+forwarders.
+
+**Apps**
+
+Lists the Apps installed on this instance. Useful in troubleshooting
+whether an app has been deployed and enabled on a remote Splunk
+instance.
+
+**Indexer Cluster**
+
+Data on this tab closely resembles the Indexer Clustering page under
+the Splunk Web GUI's settings, returning health and status information
+of the indexer cluster. Useful if the web interface and Management
+Console are unavailable.
+
+This tab is enabled on Cluster Master instances only.
+
+**SH Cluster**
+
+Data on this tab closely resembles the `show shcluster-status` command
+on the Splunk CLI, returning health and status information of the search
+head cluster. Useful if CLI access and the Management Console are
+unavailable.
+
+This tab is enabled on Search Head Cluster Member instances only.
+
+**Resource Usage**
+
+Returns resource usage of the Splunk instance's processes as well as
+it's host system.
+
+This tab returns data only on Splunk versions 6.3 and up, and not all
+data is available depending on version and instance type.
+
+**REST API**
+
+Returns a simple interface for executing REST API methods against the
+currently connected Splunk instance. GET, POST, and DELETE methods are
+supported.
+
+See the [REST API Reference Manual](http://docs.splunk.com/Documentation/Splunk/latest/RESTREF/RESTprolog)
+for more information.
+
+
+
 Changelog
 ---------
 
-2016.10.20 - initial version  
-2016.10.22 - updated Cluster GUI;  
-             added Management Console icon  
-2016.10.23 - added Change Deployment Server functionality;  
-             added Resource Usage tab  
-2016.10.26 - bug fixes  
-2017.01.08 - changed Configurations tab to pull from REST '/services/properties';  
-             now using 'requests' for REST calls;  
-             added editbox to submit data body inputs to REST;  
-             added Tools menu and moved Change Deployment Server to this location;  
-             added summary of Deployment Server URI, Cluster Master, and SHC Deployer to General tab  
-2017.01.09 - added parsing of multiple cluster master entries in 'master_uri' for 'clustermaster:' stanzas  
-2017.01.19 - changed Deployment Server settings from using splunklib.client.service.confs to rest_call to  
-             URI /services/properties after finding that the rest call was accurately representing current config  
-2017.01.20 - bug fixes  
-2017.02.25 - added Search Head Cluster tab;  
-             renamed Cluster tab to Indexer Cluster;  
-             forked Splunkd class to separate module misnersplunkdwrapper.py  
-2017.05.10 - initial public version  
-2017.07.17 - added resizable window with auto-adjusting widgets  
-2017.07.18 - added Report tab, containing Discovery and Health reports;  
-             added File > Save functionality, currently for saving reports to CSV  
-2017.07.26 - updated health report to display metric status even when not in alarm;  
-             modified Report tab, combining Discovery and Health report functionality;  
-			 modified Save Report to use current datetime and server name as default filename  
+2016.10.20
+ * initial version
+
+2016.10.22
+ * updated Cluster GUI
+ * added Management Console icon
+
+2016.10.23
+ * added Change Deployment Server functionality
+ * added Resource Usage tab
+
+2016.10.26
+ * bug fixes
+
+2017.01.08
+ * changed Configurations tab to pull from REST '/services/properties'
+ * now using 'requests' for REST calls
+ * added editbox to submit data body inputs to REST
+ * added Tools menu and moved Change Deployment Server to this location
+ * added summary of Deployment Server URI, Cluster Master, and SHC Deployer to General tab
+
+2017.01.09
+ * added parsing of multiple cluster master entries in 'master_uri' for 'clustermaster:' stanzas
+
+2017.01.19
+ * changed Deployment Server settings from using splunklib.client.service.confs to rest_call to URI /services/properties after finding that the rest call was accurately representing current config
+
+2017.01.20
+ * bug fixes
+
+2017.02.25
+ * added Search Head Cluster tab
+ * renamed Cluster tab to Indexer Cluster
+ * forked Splunkd class to separate module misnersplunkdwrapper.py
+
+2017.05.10
+ * initial public version
+
+2017.07.17
+ * added resizable window with auto-adjusting widgets
+
+2017.07.18
+ * added Report tab, containing Discovery and Health reports
+ * added File > Save functionality, currently for saving reports to CSV
+
+2017.07.26
+ * updated health report to display metric status even when not in alarm
+ * modified Report tab, combining Discovery and Health report functionality
+ * modified Save Report to use current datetime and server name as default filename
+
+2017.08.11
+ * changed the Report's status column to health
+ * added capturing of unhandled exceptions for debugging
 
 
 
@@ -100,6 +249,8 @@ License
 -------
 
 Copyright (C) 2015-2017 Joe Misner <joe@misner.net>
+
+Splunk is a trademark of Splunk Inc. in the United States and other countries.
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

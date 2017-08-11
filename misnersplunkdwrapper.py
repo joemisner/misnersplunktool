@@ -854,3 +854,4 @@ class Splunkd:
                 data += kvpair
             data += '<br>' if html else '\n'
         return data
+
