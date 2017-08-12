@@ -27,6 +27,7 @@ Changelog:
 2017.02.25 - initial version, forked from misnersplunktool.py
 2017.05.10 - initial public version
 2017.07.18 - added REST captures of data input ports and additional cluster values
+2017.08.12 - migrated report_builder method to Splunkd class
 """
 
 import re
@@ -54,6 +55,136 @@ class Splunkd:
         self._connect(splunk_host, splunk_port, splunk_user, splunk_pass)
         self.mgmt_host, self.mgmt_port, self.mgmt_user, self.mgmt_pass =\
              splunk_host, splunk_port, splunk_user, splunk_pass
+
+        # Define attribute defaults for this instance with the following rules:
+        # Private Attributes = None, Strings = (unknown), Integers = 0, Lists = [], Dictionaries = {}, Booleans = None
+
+        # poll_service_settings()
+        self._service_settings = None
+        self.host = '(unknown)'
+        self.SPLUNK_HOME = '(unknown)'
+        self.SPLUNK_DB = '(unknown)'
+        self.server_name = '(unknown)'
+        self.http_port = 0
+        self.http_ssl = None
+        self.http_server = None
+
+        # poll_service_info()
+        self._service_info = None
+        self.version = '(unknown)'
+        self.guid = '(unknown)'
+        self.startup_time = 0
+        self.startup_time_formatted = '(unknown)'
+        self.cores = 0
+        self.ram = 0
+        self.roles = ['(unknown)']
+        self.product = '(unknown)'
+        self.mode = '(unknown)'
+        self.type = '(unknown)'
+        self.os = '(unknown)'
+
+        # poll_service_messages()
+        self._service_messages = None
+        self.messages = []
+
+        # get_service_confs()
+        self._services_properties = None
+        self.configuration_files = []
+        self.deployment_server = '(unknown)'
+
+        # get_services_admin_inputstatus()
+        self._services_admin_inputstatus = None
+        self.fileinput_status = []
+        self.execinput_status = []
+        self.modularinput_status = []
+        self.rawtcp_status = []
+        self.cookedtcp_status = []
+        self.udphosts_status = []
+        self.tcprawlistenerports_status = []
+        self.tcpcookedlistenerports_status = []
+        self.udplistenerports_status = []
+
+        # poll_service_apps()
+        self._service_apps = None
+        self.apps = []
+
+        # get_services_data()
+        self._services_data_inputs_tcp_cooked = None
+        self.receiving_ports = []
+        self._services_data_inputs_tcp_raw = None
+        self.rawtcp_ports = []
+        self._services_data_inputs_udp = None
+        self.udp_ports = []
+
+        # get_services_kvstore()
+        self._services_kvstore_status = None
+        self.kvstore_port = 0
+
+        # get_services_cluster_master()
+        self._services_cluster_config = None
+        self.cluster_master_uri = '(unknown)'
+        self.cluster_mode = '(unknown)'
+        self.cluster_site = '(unknown)'
+        self.cluster_label = '(unknown)'
+        self.cluster_replicationport = 0
+        self.cluster_replicationfactor = 0
+        self.cluster_searchfactor = 0
+        self._services_shcluster_conf_deploy_fetch_url = None
+        self.shcluster_deployer = '(unknown)'
+        self._services_cluster_master_info = None
+        self.cluster_maintenance = None
+        self.cluster_rollingrestart = None
+        self.cluster_initialized = None
+        self.cluster_serviceready = None
+        self.cluster_indexingready = None
+        self._services_cluster_master_generation_master = None
+        self.cluster_alldatasearchable = None
+        self.cluster_searchfactormet = None
+        self.cluster_replicationfactormet = None
+        self._services_cluster_master_peers = None
+        self.cluster_peers = []
+        self.cluster_peers_searchable = 0
+        self.cluster_peers_up = 0
+        self._services_cluster_master_indexes = None
+        self.cluster_indexes = []
+        self.cluster_indexes_searchable = 0
+        self._services_cluster_master_searchheads = None
+        self.cluster_searchheads = []
+        self.cluster_searchheads_connected = 0
+
+        # get_services_shcluster()
+        self._services_shcluster_config = None
+        self.shcluster_label = '(unknown)'
+        self.shcluster_replicationport = 0
+        self.shcluster_replicationfactor = 0
+        self._services_shcluster_status = None
+        self.shcluster_captainlabel = '(unknown)'
+        self.shcluster_captainuri = '(unknown)'
+        self.shcluster_captainid = '(unknown)'
+        self.shcluster_dynamiccaptain = None
+        self.shcluster_electedcaptain = '(unknown)'
+        self.shcluster_rollingrestart = None
+        self.shcluster_serviceready = None
+        self.shcluster_minpeersjoined = None
+        self.shcluster_initialized = None
+        self._services_shcluster_member_members = None
+        self.shcluster_members = []
+
+        # get_services_server_status()
+        self._services_server_status_partitionsspace = None
+        self.disk_partitions = []
+        self._services_server_status_resourceusage_hostwide = None
+        self.cpu_usage = 0
+        self.mem_usage = 0
+        self.swap_usage = 0
+        self._services_server_status_resourceusage_splunkprocesses = None
+        self.splunk_processes = []
+
+        # refresh_config()
+        self._servicesNS_admin_search_admin = None
+
+        # report_builder()
+        self.report = []
 
     def _connect(self, splunk_host, splunk_port, splunk_user, splunk_pass):
         """Connect to Splunk instance"""
@@ -117,21 +248,20 @@ class Splunkd:
         self.SPLUNK_DB = self._service_settings['SPLUNK_DB']
         self.server_name = self._service_settings['serverName']
         self.http_port = int(self._service_settings['httpport'])
-        if self._service_settings['enableSplunkWebSSL'] == '1':
-            self.http_ssl = True
-        else:
-            self.http_ssl = False
-        if self._service_settings['startwebserver'] == '1':
-            self.http_server = True
-        else:
-            self.http_server = False
+        self.http_ssl = True if self._service_settings['enableSplunkWebSSL'] == '1' else False
+        self.http_server = True if self._service_settings['startwebserver'] == '1' else False
 
     def poll_service_info(self):
         """Poll splunklib.client.service.info"""
         self._service_info = self.service.info
         self.version = self._service_info['version']
         self.guid = self._service_info['guid']
-        self.startup_time = int(self._service_info['startup_time']) if 'startup_time' in self._service_info else None
+        self.startup_time = int(self._service_info['startup_time']) if 'startup_time' in self._service_info else 0
+        if self.startup_time:
+            self.startup_time_formatted =\
+                time.strftime("%m/%d/%Y %I:%M:%S %p", time.localtime(float(self.startup_time)))
+        else:
+            self.startup_time_formatted = '(unknown)'
         self.cores = int(self._service_info['numberOfCores']) if 'numberOfCores' in self._service_info else 0
         self.ram = self._service_info['physicalMemoryMB'] if 'physicalMemoryMB' in self._service_info else 0
         self.roles = self._service_info['server_roles'] if 'server_roles' in self._service_info else ['(unknown)']
@@ -412,7 +542,7 @@ class Splunkd:
             for port in ports:
                 self.receiving_ports.append(int(port['title']))
         except:
-            self._services_data_inputs_tcp_cooked = None
+            pass
 
         self.rawtcp_ports = []
         try:
@@ -422,7 +552,7 @@ class Splunkd:
             for port in ports:
                 self.rawtcp_ports.append(int(port['title']))
         except:
-            self._services_data_inputs_tcp_raw = None
+            pass
 
         self.udp_ports = []
         try:
@@ -432,7 +562,7 @@ class Splunkd:
             for port in ports:
                 self.udp_ports.append(int(port['title']))
         except:
-            self._services_data_inputs_udp = None
+            pass
 
     def get_services_kvstore(self):
         """GET /services/kvstore/*"""
@@ -441,8 +571,7 @@ class Splunkd:
             status_current = self._services_kvstore_status['feed']['entry']['content']['current']
             self.kvstore_port = int(status_current['port'])
         except:
-            self._services_data_inputs_tcp_cooked = None
-            self.kvstore_port = False
+            self.kvstore_port = 0
 
     def get_services_cluster_master(self):
         """GET /services/cluster/*"""
@@ -455,36 +584,35 @@ class Splunkd:
             try:
                 self.cluster_replicationport = int(cluster_config['replication_port'])
             except:
-                self.cluster_replicationport = None
+                pass
             try:
                 self.cluster_replicationfactor = int(cluster_config['replication_factor'])
             except:
-                self.cluster_replicationfactor = None
+                pass
             try:
                 self.cluster_searchfactor = int(cluster_config['search_factor'])
             except:
-                self.cluster_searchfactor = None
+                pass
 
-            # Get list of cluster master nodes and parse for host:port values
-            resolved_masteruri = ''
-            masteruri_list = self.rest_call('/services/properties/server/clustering/master_uri', count=-1).split(',')
-            for masteruri in masteruri_list:
-                masteruri = masteruri.strip()  # Remove surrounding whitespace
-                if masteruri[:14] == 'clustermaster:':  # Resolve 'clustermaster:' to its stanza's master_uri value
-                    masteruri = self.rest_call('/services/properties/server/%s/master_uri' % masteruri, count=-1)
-                if '://' in masteruri:  # Parse host:port from URI
-                    masteruri = re.findall(r"https?://(.+)/?(.*)", masteruri)[0][0]
-                resolved_masteruri += masteruri + ', '
-            self.cluster_master_uri = resolved_masteruri[:-2]  # Save, excluding final comma and space
+            if self.cluster_mode == 'master':
+                self.cluster_master_uri = '(self)'
+            elif self.cluster_mode in ['slave', 'searchhead']:
+                # Get list of cluster master nodes and parse for host:port values
+                resolved_masteruri = ''
+                masteruri_list =\
+                    self.rest_call('/services/properties/server/clustering/master_uri', count=-1).split(',')
+                for masteruri in masteruri_list:
+                    masteruri = masteruri.strip()  # Remove surrounding whitespace
+                    if masteruri[:14] == 'clustermaster:':  # Resolve 'clustermaster:' to its stanza's master_uri value
+                        masteruri = self.rest_call('/services/properties/server/%s/master_uri' % masteruri, count=-1)
+                    if '://' in masteruri:  # Parse host:port from URI
+                        masteruri = re.findall(r"https?://(.+)/?(.*)", masteruri)[0][0]
+                    resolved_masteruri += masteruri + ', '
+                self.cluster_master_uri = resolved_masteruri[:-2]  # Save, excluding final comma and space
+            else:
+                self.cluster_master_uri = '(none)'
         except:
-            self._services_cluster_config = None
-            self.cluster_master_uri = None
-            self.cluster_mode = None
-            self.cluster_site = None
-            self.cluster_label = None
-            self.cluster_replicationport = None
-            self.cluster_replicationfactor = None
-            self.cluster_searchfactor = None
+            pass
 
         try:
             self._services_shcluster_conf_deploy_fetch_url =\
@@ -493,22 +621,19 @@ class Splunkd:
                 shcdeployer = re.findall(r"https?://(.+)/?(.*)", self._services_shcluster_conf_deploy_fetch_url)[0][0]
                 self.shcluster_deployer = shcdeployer
             else:
-                self.shcluster_deployer = False
+                self.shcluster_deployer = '(none)'
         except:
-            self._services_shcluster_conf_deploy_fetch_url = None
-            self.shcluster_deployer = False
+            self.shcluster_deployer = '(none)'
 
         try:
             self._services_cluster_master_info = self.rest_call('/services/cluster/master/info', count=-1)
             cluster = self._services_cluster_master_info['feed']['entry']['content']
         except KeyError:
-            self._services_cluster_master_info = None
             self.cluster_maintenance = False
             self.cluster_rollingrestart = False
             self.cluster_initialized = False
             self.cluster_serviceready = False
             self.cluster_indexingready = False
-            self._services_cluster_master_generation_master = None
             self.cluster_alldatasearchable = False
             self.cluster_searchfactormet = False
             self.cluster_replicationfactormet = False
@@ -527,10 +652,13 @@ class Splunkd:
         self.cluster_searchfactormet = True if generation['search_factor_met'] == '1' else False
         self.cluster_replicationfactormet = True if generation['replication_factor_met'] == '1' else False
 
-        self._services_cluster_master_peers = self.rest_call('/services/cluster/master/peers', count=-1)
-        self.cluster_peers = []
-        self.cluster_peers_searchable = 0
-        self.cluster_peers_up = 0
+        try:
+            self._services_cluster_master_peers = self.rest_call('/services/cluster/master/peers', count=-1)
+            self.cluster_peers = []
+            self.cluster_peers_searchable = 0
+            self.cluster_peers_up = 0
+        except:
+            pass
         try:
             peers = self._services_cluster_master_peers['feed']['entry']
             if type(peers) is not list: peers = [peers]
@@ -555,9 +683,12 @@ class Splunkd:
         except KeyError:
             pass  # No peer entries
 
-        self._services_cluster_master_indexes = self.rest_call('/services/cluster/master/indexes', count=-1)
-        self.cluster_indexes = []
-        self.cluster_indexes_searchable = 0
+        try:
+            self._services_cluster_master_indexes = self.rest_call('/services/cluster/master/indexes', count=-1)
+            self.cluster_indexes = []
+            self.cluster_indexes_searchable = 0
+        except:
+            pass
         try:
             indexes = self._services_cluster_master_indexes['feed']['entry']
             if type(indexes) is not list: indexes = [indexes]
@@ -610,9 +741,12 @@ class Splunkd:
         except KeyError:
             pass  # No index entries
 
-        self._services_cluster_master_searchheads = self.rest_call('/services/cluster/master/searchheads', count=-1)
-        self.cluster_searchheads = []
-        self.cluster_searchheads_connected = 0
+        try:
+            self._services_cluster_master_searchheads = self.rest_call('/services/cluster/master/searchheads', count=-1)
+            self.cluster_searchheads = []
+            self.cluster_searchheads_connected = 0
+        except:
+            pass
         try:
             searchheads = self._services_cluster_master_searchheads['feed']['entry']
             if type(searchheads) is not list: searchheads = [searchheads]
@@ -639,16 +773,13 @@ class Splunkd:
             try:
                 self.shcluster_replicationport = int(shcluster_config['replication_port'])
             except:
-                self.shcluster_replicationport = None
+                pass
             try:
                 self.shcluster_replicationfactor = int(shcluster_config['replication_factor'])
             except:
-                self.shcluster_replicationfactor = None
+                pass
         except:
-            self._services_shcluster_config = None
-            self.shcluster_label = None
-            self.shcluster_replicationport = None
-            self.shcluster_replicationfactor = None
+            pass
 
         try:
             self._services_shcluster_status = self.rest_call('/services/shcluster/status', count=-1)
@@ -665,12 +796,7 @@ class Splunkd:
             self.shcluster_minpeersjoined = True if captain['min_peers_joined_flag'] == '1' else False
             self.shcluster_initialized = True if captain['initialized_flag'] == '1' else False
         except:
-            self._services_shcluster_status = None
-            self.shcluster_captainlabel = None
-            self.shcluster_captainuri = None
-            self.shcluster_captainid = None
             self.shcluster_dynamiccaptain = False
-            self.shcluster_electedcaptain = None
             self.shcluster_rollingrestart = False
             self.shcluster_serviceready = False
             self.shcluster_minpeersjoined = False
@@ -697,8 +823,7 @@ class Splunkd:
                     'guid': member['title']}
                 self.shcluster_members.append(members_dict)
         except:
-            self._services_shcluster_member_members = None
-            self.shcluster_members = None
+            pass
 
     def get_services_server_status(self):
         """GET /services/server/status/*"""
@@ -722,8 +847,7 @@ class Splunkd:
             except KeyError:
                 pass  # No peer entries
         except KeyError:
-            self._services_server_status_partitionsspace = None
-            self.disk_partitions = None
+            pass
 
         # Host-Wide Resource Usage
         try:
@@ -743,10 +867,7 @@ class Splunkd:
                 self._services_server_status_resourceusage_hostwide['feed']['entry']['content']['swap_used']
             self.swap_usage = int(float(self.swap_used) / float(self.swap) * 100)
         except KeyError:
-            self._services_server_status_resourceusage_hostwide = None
-            self.cpu_usage = None
-            self.mem_usage = None
-            self.swap_usage = None
+            pass
 
         # I/O Stats Resource Usage
         #try:
@@ -756,7 +877,7 @@ class Splunkd:
         #    )
         #    pprint(self._services_server_status_resourceusage_iostats)
         #except KeyError:
-        #    self._services_server_status_resourceusage_iostats = None
+        #    pass
 
         # Splunk Process Resource Usage
         try:
@@ -780,43 +901,7 @@ class Splunkd:
             except KeyError:
                 pass  # No peer entries
         except KeyError:
-            self._services_server_status_resourceusage_splunkprocesses = None
-            self.splunk_processes = None
-
-    # Control process
-
-    def refresh_config(self):
-        """Performs actions similar to web server URI /debug/refresh"""
-        self._servicesNS_admin_search_admin = self.rest_call('/servicesNS/admin/search/admin', count=-1)
-        endpoints = [  # Manually add specified endpoints
-            'admin/conf-times',
-            'data/ui/manager',
-            'data/ui/nav',
-            'data/ui/views']
-        # Add all endpoints under '/servicesNS/admin/search/admin' with _reload link
-        for entry in self._servicesNS_admin_search_admin['feed']['entry']:
-            # Ignore incapable endpoints
-            if entry['title'] == 'fifo' and 'Windows' in self.os:  # never loads on Windows despite being advertised
-                continue
-            if entry['title'] == 'auth-services':  # causes logout when refreshed
-                continue
-            # Add the rest
-            for link in entry['link']:
-                if link['rel'] == '_reload':
-                    name = re.findall(r'/servicesNS/admin/search/(.+)/_reload', link['href'])[0]
-                    endpoints.append(name)
-        output = ''
-        for endpoint in endpoints:
-            try:
-                uri = '/servicesNS/admin/search/%s/_reload' % endpoint
-                self.service.post(uri, owner='nobody', app='search', sharing='user')
-                output += 'Refreshing %s OK\n' % endpoint.ljust(39, ' ')
-            except Exception, e:
-                output += 'Refreshing %s %s\n' % (endpoint.ljust(42, ' '), e)
-            except:
-                output += 'Refreshing %s %s\n' % (endpoint.ljust(42, ' '), 'unspecified error')
-        output += 'DONE'
-        return output
+            pass
 
     # Pull configuration values
 
@@ -855,3 +940,300 @@ class Splunkd:
             data += '<br>' if html else '\n'
         return data
 
+    # Control process
+
+    def refresh_config(self):
+        """Performs actions similar to web server URI /debug/refresh"""
+        try:
+            self._servicesNS_admin_search_admin = self.rest_call('/servicesNS/admin/search/admin', count=-1)
+            endpoints = [  # Manually add specified endpoints
+                'admin/conf-times',
+                'data/ui/manager',
+                'data/ui/nav',
+                'data/ui/views']
+            # Add all endpoints under '/servicesNS/admin/search/admin' with _reload link
+            for entry in self._servicesNS_admin_search_admin['feed']['entry']:
+                # Ignore incapable endpoints
+                if entry['title'] == 'fifo' and 'Windows' in self.os:  # never loads on Windows despite being advertised
+                    continue
+                if entry['title'] == 'auth-services':  # causes logout when refreshed
+                    continue
+                # Add the rest
+                for link in entry['link']:
+                    if link['rel'] == '_reload':
+                        name = re.findall(r'/servicesNS/admin/search/(.+)/_reload', link['href'])[0]
+                        endpoints.append(name)
+            output = ''
+            for endpoint in endpoints:
+                try:
+                    uri = '/servicesNS/admin/search/%s/_reload' % endpoint
+                    self.service.post(uri, owner='nobody', app='search', sharing='user')
+                    output += 'Refreshing %s OK\n' % endpoint.ljust(39, ' ')
+                except Exception, e:
+                    output += 'Refreshing %s %s\n' % (endpoint.ljust(42, ' '), e)
+                except:
+                    output += 'Refreshing %s %s\n' % (endpoint.ljust(42, ' '), 'unspecified error')
+            output += 'DONE'
+        except:
+            output = "Unhandled exception while performing refresh."
+
+        return output
+
+    # Other
+
+    def report_builder(self, healthchecks):
+        """Executes discovery and health checks against connected instance, recording results to self.report"""
+        # In the config, unspecified values will be replaced with defaults, while "False" values won't be checked
+        self.report = []
+
+        # Convenience function to add individual entries to the report
+        def report_append(category, name, health, value):
+            self.report.append({
+                'category': category,
+                'name': name,
+                'health': health,
+                'value': value
+            })
+
+        # Report entries, by category
+
+        #  Server
+        report_append('Server', 'Host/IP', 'N/A', self.mgmt_host)
+        report_append('Server', 'Server Name', 'N/A', self.server_name)
+        report_append('Server', 'GUID', 'N/A', self.guid)
+        report_append('Server', 'Type', 'N/A', self.type)
+        report_append('Server', 'Roles', 'N/A', ', '.join(map(str, self.roles)))
+        report_append('Server', 'OS', 'N/A', self.os)
+        report_append('Server', 'Web Enabled', 'N/A', str(self.http_server))
+
+        if healthchecks['version_warning'] or healthchecks['version_caution']:
+            if self.version:
+                minor_version = float(self.version.split('.')[0] + '.' + self.version.split('.')[1])
+                if minor_version <= healthchecks['version_warning']:
+                    health = 'Warning'
+                elif minor_version <= healthchecks['version_caution']:
+                    health = 'Caution'
+                else:
+                    health = 'OK'
+                    value = self.version
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Server', 'Version', health, value)
+
+        if healthchecks['uptime_warning'] or healthchecks['uptime_caution']:
+            if self.startup_time:
+                uptime_seconds = int(time.time()) - self.startup_time
+                if uptime_seconds < healthchecks['uptime_warning']:
+                    health = 'Warning'
+                elif uptime_seconds < healthchecks['uptime_caution']:
+                    health = 'Caution'
+                else:
+                    health = 'OK'
+                value = self.startup_time_formatted
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Server', 'Uptime', health, value)
+
+        if healthchecks['http_ssl_caution']:
+            if not self.http_ssl:
+                if healthchecks['http_ssl_caution']:
+                    health = 'Caution'
+                    value = 'False'
+                else:
+                    health = 'OK'
+                    value = 'True'
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Server', 'HTTP SSL', health, value)
+
+        if healthchecks['messages_caution']:
+            if self.messages:
+                messages = []
+                health = 'OK'
+                for message in self.messages:
+                    if str(message['severity']).lower != 'info':
+                        health = 'Caution'
+                        messages.append(message['title'])
+                value = ', '.join(messages) if messages else 'None'
+            else:
+                health = 'OK'
+                value = 'None'
+            report_append('Server', 'Messages', health, value)
+
+        # Ports
+        report_append('Ports', 'Management Port', 'N/A', str(self.mgmt_port))
+        report_append('Ports', 'Web Port', 'N/A', str(self.http_port))
+        report_append('Ports', 'Receiving Ports', 'N/A', ', '.join(map(str, self.receiving_ports)))
+        report_append('Ports', 'TCP Input Ports', 'N/A', ', '.join(map(str, self.rawtcp_ports)))
+        report_append('Ports', 'UDP Input Ports', 'N/A', ', '.join(map(str, self.udp_ports)))
+        report_append('Ports', 'Replication Port', 'N/A', str(self.cluster_replicationport))
+        report_append('Ports', 'KV Store Port', 'N/A', str(self.kvstore_port))
+
+        #  Resources
+        if healthchecks['cpu_cores_caution']:
+            if self.cores:
+                health = 'Caution' if self.cores < healthchecks['cpu_cores_caution'] else 'OK'
+                value = str(self.cores)
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Resources', 'CPU Cores', health, value)
+
+        if healthchecks['mem_capacity_caution']:
+            if self.ram:
+                health = 'Caution' if self.ram < healthchecks['mem_capacity_caution'] else 'OK'
+                value = "%s MB" % self.ram
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Resources', 'RAM Size', health, value)
+
+        if healthchecks['cpu_usage_warning'] or healthchecks['cpu_usage_caution']:
+            if self.cpu_usage:
+                if self.cpu_usage >= healthchecks['cpu_usage_warning']:
+                    health = 'Warning'
+                elif self.cpu_usage >= healthchecks['cpu_usage_caution']:
+                    health = 'Caution'
+                else:
+                    health = 'OK'
+                value = "%i%%" % self.cpu_usage
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Resources', 'CPU Usage', health, value)
+
+        if healthchecks['mem_usage_warning'] or healthchecks['mem_usage_caution']:
+            if self.mem_usage:
+                if self.mem_usage >= healthchecks['mem_usage_warning']:
+                    health = 'Warning'
+                elif self.mem_usage >= healthchecks['mem_usage_caution']:
+                    health = 'Caution'
+                else:
+                    health = 'OK'
+                value = "%i%%" % self.mem_usage
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Resources', 'RAM Usage', health, value)
+
+        if healthchecks['swap_usage_warning'] or healthchecks['swap_usage_caution']:
+            if self.swap_usage:
+                if self.swap_usage >= healthchecks['swap_usage_warning']:
+                    health = 'Warning'
+                elif self.swap_usage >= healthchecks['swap_usage_caution']:
+                    health = 'Caution'
+                else:
+                    health = 'OK'
+                value = "%i%%" % self.swap_usage
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Resources', 'Swap Usage', health, value)
+
+        if healthchecks['diskpartition_usage_warning'] or healthchecks['diskpartition_usage_caution']:
+            if self.disk_partitions:
+                mounts = []
+                health = 'OK'
+                for mount in self.disk_partitions:
+                    name = mount['name']
+                    percent_used = float(mount['used'][:-1])
+                    if percent_used >= healthchecks['diskpartition_usage_warning'] and health in ['OK', 'Caution']:
+                        health = 'Warning'
+                    elif percent_used >= healthchecks['diskpartition_usage_caution'] and health == 'OK':
+                        health = 'Caution'
+                    mounts.append("'%s': %i%%" % (name, percent_used))
+                value = ', '.join(mounts) if mounts else 'None'
+            else:
+                health = 'Unknown'
+                value = '?'
+            report_append('Resources', 'Disk Usage', health, value)
+
+        # Deployment
+        report_append('Deployment', 'Client of Deployment Server', 'N/A', self.deployment_server)
+        report_append('Deployment', 'Cluster Master', 'N/A', self.cluster_master_uri)
+        report_append('Deployment', 'Fetch from SHC Deployer', 'N/A', self.shcluster_deployer)
+
+        # Indexer Cluster
+        if 'cluster_master' in self.roles:
+            report_append('Cluster', 'IC Label', 'N/A', self.cluster_label)
+            report_append('Cluster', 'IC Mode', 'N/A', self.cluster_mode)
+            report_append('Cluster', 'IC Site', 'N/A', self.cluster_site)
+
+            if healthchecks['cluster_maintenance_caution']:
+                if self.cluster_maintenance:
+                    report_append('Cluster', 'IC Maintenance Mode', 'Caution', 'True')
+                else:
+                    report_append('Cluster', 'IC Maintenance Mode', 'OK', 'False')
+
+            if healthchecks['cluster_rollingrestart_caution']:
+                if self.cluster_rollingrestart:
+                    report_append('Cluster', 'IC Rolling Restart', 'Caution', 'True')
+                else:
+                    report_append('Cluster', 'IC Rolling Restart', 'OK', 'False')
+
+            if healthchecks['cluster_alldatasearchable_warning']:
+                if not self.cluster_alldatasearchable:
+                    report_append('Cluster', 'IC All Data Searchable', 'Warning', 'False')
+                else:
+                    report_append('Cluster', 'IC All Data Searchable', 'OK', 'True')
+
+            report_append('Cluster', 'IC Search Factor', 'N/A', str(self.cluster_searchfactor))
+            if healthchecks['cluster_searchfactor_caution']:
+                if not self.cluster_searchfactormet:
+                    report_append('Cluster', 'IC Search Factor Met', 'Caution', 'False')
+                else:
+                    report_append('Cluster', 'IC Search Factor Met', 'OK', 'True')
+
+            report_append('Cluster', 'IC Rep Factor', 'N/A', str(self.cluster_replicationfactor))
+            if healthchecks['cluster_replicationfactor_caution']:
+                if not self.cluster_replicationfactormet:
+                    report_append('Cluster', 'IC Rep Factor Met', 'Caution', 'False')
+                else:
+                    report_append('Cluster', 'IC Rep Factor Met', 'OK', 'True')
+
+            if healthchecks['cluster_peersnotsearchable_warning'] and self.cluster_peers:
+                if self.cluster_peers_searchable < len(self.cluster_peers):
+                    health = 'Warning'
+                else:
+                    health = 'OK'
+                report_append('Cluster', 'IC Searchable Peers', health,
+                              "%s of %s" % (self.cluster_peers_searchable, len(self.cluster_peers)))
+
+            if healthchecks['cluster_searchheadsnotconnected_warning'] and self.cluster_searchheads:
+                if self.cluster_searchheads_connected < len(self.cluster_searchheads):
+                    health = 'Warning'
+                else:
+                    health = 'OK'
+                report_append('Cluster', 'IC Connected Search Heads', health,
+                              "%s of %s" % (self.cluster_searchheads_connected,
+                                            len(self.cluster_searchheads)))
+
+        # Search Head Cluster
+        if 'shc_member' in self.roles:
+            report_append('Cluster', 'SHC Label', 'N/A', self.shcluster_label)
+            report_append('Cluster', 'SHC Rep Factor', 'N/A', str(self.shcluster_replicationfactor))
+
+            if healthchecks['shcluster_rollingrestart_caution']:
+                if self.shcluster_rollingrestart:
+                    report_append('Cluster', 'SHC Rolling Restart', 'Caution', 'True')
+                else:
+                    report_append('Cluster', 'SHC Rolling Restart', 'OK', 'False')
+
+            if healthchecks['shcluster_serviceready_warning']:
+                if not self.shcluster_serviceready:
+                    report_append('Cluster', 'SHC Service Ready', 'Warning', 'False')
+                else:
+                    report_append('Cluster', 'SHC Service Ready', 'OK', 'True')
+
+            if healthchecks['shcluster_minpeersjoined_warning']:
+                if not self.shcluster_minpeersjoined:
+                    report_append('Cluster', 'SHC Minimum Peers Joined', 'Warning', 'False')
+                else:
+                    report_append('Cluster', 'SHC Minimum Peers Joined', 'OK', 'True')
+
+        # Counts
+        report_append('Counts', 'Messages', 'N/A', str(len(self.messages)))
+        report_append('Counts', 'Apps', 'N/A', str(len(self.apps)))

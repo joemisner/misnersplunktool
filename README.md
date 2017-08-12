@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2017.08.11
+Misner Splunk Tool v2017.08.12
 by Joe Misner  
 http://tools.misner.net/  
 
@@ -242,6 +242,12 @@ Changelog
 2017.08.11
  * changed the Report's status column to health
  * added capturing of unhandled exceptions for debugging
+
+2017.08.12
+ * unhandled exceptions get written to error.log in app directory
+ * migrated report_builder method to Splunkd class
+ * fixed report code related to SHC counts causing a crash
+ * misc code cleanup
 
 
 
