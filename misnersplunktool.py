@@ -22,6 +22,7 @@ Dependencies:
 - Python v2.7.13, https://www.python.org/
 - Python module 'splunk-sdk' v1.6.0, https://pypi.python.org/pypi/splunk-sdk
 - Python module 'PySide' v1.2.4, https://pypi.python.org/pypi/PySide
+- Python module 'markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
 - Python module 'misnersplunktoolui.py'
 - Python module 'misnersplunkdwrapper.py'
 """
@@ -35,12 +36,13 @@ import traceback
 import math
 import re
 import ConfigParser
+import markdown
 import splunklib.binding as binding
-from PySide import QtCore, QtGui
+from PySide import QtCore, QtGui, QtWebKit
 from misnersplunktoolui import Ui_MainWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2017.08.12'
+__version__ = '2017.10.10'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -100,26 +102,6 @@ password=changeme
 [splunkd::splunk.myhost.com:8089]
 username=admin
 password=changeme
-"""
-
-HELP_TEXT = """
-Misner Splunk Tool connects to a Splunk Enterprise or Universal
-Forwarder instance via REST API, retrieving the instance's
-configurations, input status, apps, and other useful information for
-troubleshooting and analysis. This tool's intention is to grant easy
-access into remote Splunk instances where shell or web access may not
-be available, but the splunkd management port (default 8089) is
-accessible.
-
-Edit the included file misnersplunktool.conf located in this
-application's directory to specify configurations such as default
-hosts, credentials, and REST endpoints. If this file is missing,
-navigate to 'File > Build misnersplunktool.conf' and edit this file
-with a text editor.
-
-Tooltips have been setup throughout the tool. For additional help,
-hover your mouse pointer over different areas of the tool's interface
-for more information.
 """
 
 ABOUT_TEXT = """
@@ -185,7 +167,7 @@ def fatal_error(txt):
     """Prints error to syserr in standard Unix format with filename, to main window if it exists, as well as to file
      error.log in the current directory, then quits"""
     try:
-        window.critical_msg(txt)
+        main_window.critical_msg(txt)
     except NameError:
         pass
     try:
@@ -251,7 +233,6 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.setupUi(self)
         self.show()
         self.disconnect()
-        self.report = None
 
         #  General tab
         self.ui.tableMessages.setColumnWidth(0, 140)  # Time Created
@@ -1044,7 +1025,9 @@ class MainWindow(QtGui.QMainWindow):
     def actionSaveReport_triggered(self):
         """File > Save Report"""
         # Throw an error if we haven't successfully connected to a Splunk instance yet
-        if not self.report:
+        try:
+            self.splunkd.report
+        except AttributeError:
             self.warning_msg("No collected reporting data to save.")
             return
 
@@ -1064,7 +1047,7 @@ class MainWindow(QtGui.QMainWindow):
             report += "# Misner Splunk Tool v%s by Joe Misner - http://tools.misner.net/\n" % __version__
             report += "# Report produced %s\n" % local_datetime_full
             report += "Category,Name,Health,Value\n"
-            for entry in self.report:
+            for entry in self.splunkd.report:
                 report += "%s,%s,%s,%s\n" % (entry['category'], entry['name'], entry['health'],
                                              str(entry['value']).replace(',', ';'))
 
@@ -1080,7 +1063,7 @@ class MainWindow(QtGui.QMainWindow):
         # TO-DO: Implement save or print function for current tab
         current_tab = self.ui.tabWidgetMain.tabText(self.ui.tabWidgetMain.currentIndex())
         if current_tab == "Report":
-            if not self.report:
+            if not self.splunkd.report:
                 self.warning_msg("No collected data to print.")
         else:
             self.warning_msg("Printing functionality not created for currently selected tab.")
@@ -1104,7 +1087,8 @@ class MainWindow(QtGui.QMainWindow):
 
     def actionHelp_triggered(self):
         """Help > Help dialog box"""
-        QtGui.QMessageBox.about(self, "Help", HELP_TEXT)
+        help_window.get_markdown()
+        help_window.show()
 
     def actionAbout_triggered(self):
         """Help > About dialog box"""
@@ -1357,6 +1341,31 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.comboRestURI.addItem(combobox_text)
 
 
+class HelpWindow(QtWebKit.QWebView):
+    """Object class for the help window"""
+    def __init__(self):
+        """Executed when the HelpWindow() object is created"""
+        # GUI Setup
+        QtWebKit.QWebView.__init__(self)
+        self.setWindowTitle("Help - README.md")
+        self.setWindowIcon(main_window.windowIcon())
+        self.setWindowModality(QtCore.Qt.ApplicationModal)
+        settings = QtWebKit.QWebSettings.globalSettings()
+        settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, 'Verdana')
+        settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 12)
+        self.get_markdown()
+
+    def get_markdown(self):
+        """Retrieves markdown text from the README.md file in the script directory"""
+        try:
+            with open(os.path.join(SCRIPT_DIR, 'README.md'), 'r') as f:
+                readme_file = f.read()
+            html = markdown.markdown(readme_file, ['markdown.extensions.extra', 'markdown.extensions.sane_lists'])
+        except:
+            html = "<html>README.md file missing</html>"
+        self.setHtml(html)
+
+
 if __name__ == '__main__':
     # Pull available configs from misnertraptool.conf
     config = ConfigParser.ConfigParser(allow_no_value=True)
@@ -1376,6 +1385,7 @@ if __name__ == '__main__':
 
     # PySide GUI
     app = QtGui.QApplication(sys.argv)
-    window = MainWindow()
+    main_window = MainWindow()
+    help_window = HelpWindow()
 
     sys.exit(app.exec_())
