@@ -469,7 +469,7 @@ required:</string>
 (Retrieved from REST API /services/properties)</string>
       </property>
      </widget>
-     <widget class="QTextEdit" name="editConfig">
+     <widget class="QWebView" name="editConfig">
       <property name="geometry">
        <rect>
         <x>7</x>
@@ -477,23 +477,6 @@ required:</string>
         <width>711</width>
         <height>351</height>
        </rect>
-      </property>
-      <property name="font">
-       <font>
-        <family>Courier New</family>
-       </font>
-      </property>
-      <property name="autoFormatting">
-       <set>QTextEdit::AutoNone</set>
-      </property>
-      <property name="undoRedoEnabled">
-       <bool>false</bool>
-      </property>
-      <property name="lineWrapMode">
-       <enum>QTextEdit::NoWrap</enum>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
       </property>
      </widget>
      <widget class="QLabel" name="label_41">
@@ -2160,7 +2143,7 @@ required:</string>
        <bool>false</bool>
       </property>
      </widget>
-     <widget class="QTextEdit" name="editRestResult">
+     <widget class="QWebView" name="editRestResult">
       <property name="geometry">
        <rect>
         <x>7</x>
@@ -2173,18 +2156,6 @@ required:</string>
        <font>
         <family>Courier New</family>
        </font>
-      </property>
-      <property name="autoFormatting">
-       <set>QTextEdit::AutoNone</set>
-      </property>
-      <property name="undoRedoEnabled">
-       <bool>false</bool>
-      </property>
-      <property name="lineWrapMode">
-       <enum>QTextEdit::NoWrap</enum>
-      </property>
-      <property name="readOnly">
-       <bool>true</bool>
       </property>
      </widget>
      <widget class="QLineEdit" name="editRestBodyInput">
@@ -2799,6 +2770,13 @@ required:</string>
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QWebView</class>
+   <extends>QTextEdit</extends>
+   <header>qwebview.h</header>
+  </customwidget>
+ </customwidgets>
  <tabstops>
   <tabstop>comboAddress</tabstop>
   <tabstop>editUsername</tabstop>

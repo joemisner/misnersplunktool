@@ -22,7 +22,8 @@ Dependencies:
 - Python v2.7.13, https://www.python.org/
 - Python module 'splunk-sdk' v1.6.0, https://pypi.python.org/pypi/splunk-sdk
 - Python module 'PySide' v1.2.4, https://pypi.python.org/pypi/PySide
-- Python module 'markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
+- Python module 'Markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
+- Python module 'Pygments' v2.2.0, https://pypi.python.org/pypi/Pygments
 - Python module 'misnersplunktoolui.py'
 - Python module 'misnersplunkdwrapper.py'
 """
@@ -37,12 +38,15 @@ import math
 import re
 import ConfigParser
 import markdown
+from pygments import highlight
+from pygments.lexers import XmlLexer, IniLexer
+from pygments.formatters import HtmlFormatter
 import splunklib.binding as binding
 from PySide import QtCore, QtGui, QtWebKit
 from misnersplunktoolui import Ui_MainWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2017.10.10'
+__version__ = '2017.10.12'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -665,7 +669,7 @@ class MainWindow(QtGui.QMainWindow):
         #  Report tab
         self.ui.tableReport.setRowCount(0)
         #  Configuration tab
-        self.ui.editConfig.setText(None)
+        self.ui.editConfig.setHtml(None)
         #  Input Status tab
         self.ui.tableFileStatus.setRowCount(0)
         self.ui.tableTCP.setRowCount(0)
@@ -710,7 +714,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.tableResourceUsageProcesses.setRowCount(0)
         self.ui.tableResourceUsageDisks.setRowCount(0)
         #  REST API tab
-        self.ui.editRestResult.setText(None)
+        self.ui.editRestResult.setHtml(None)
 
         self.statusbar_msg('Disconnected')
 
@@ -752,9 +756,15 @@ class MainWindow(QtGui.QMainWindow):
             self.statusbar_msg('Polling KV store info...')
             self.splunkd.get_services_kvstore()
             self.statusbar_msg('Polling cluster master info...')
-            self.splunkd.get_services_cluster_master()
+            self.splunkd.get_services_cluster()
             self.statusbar_msg('Polling search head cluster info...')
             self.splunkd.get_services_shcluster()
+            self.statusbar_msg('Polling deployment info...')
+            self.splunkd.get_services_deployment()
+            self.statusbar_msg('Polling licensing info...')
+            self.splunkd.get_services_licenser()
+            self.statusbar_msg('Polling distributed search info...')
+            self.splunkd.get_services_search()
             self.statusbar_msg('Polling introspection...')
             self.splunkd.get_services_server_status()
         except socket.error as e:
@@ -856,7 +866,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.comboConfig.clear()
         self.ui.comboConfig.addItems(self.splunkd.configuration_files)
         self.ui.comboConfig.setCurrentIndex(self.ui.comboConfig.findText('server'))
-        self.ui.editConfig.clear()
+        self.ui.editConfig.setHtml(None)
         self.comboConfig_activated()
 
         # Fill in Input Status tab
@@ -1183,7 +1193,7 @@ class MainWindow(QtGui.QMainWindow):
             self.critical_msg('Splunk connection reset')
             return
 
-        self.ui.editConfig.setText('Please wait...')
+        self.ui.editConfig.setHtml('Please wait...')
 
         # Pull config
         filename = self.ui.comboConfig.currentText()
@@ -1191,7 +1201,8 @@ class MainWindow(QtGui.QMainWindow):
 
         #  Setting html to true (below) returns colors, however also 'resolves' any existing HTML within the values
         data = self.splunkd.get_configuration_kvpairs(filename, html=False)
-        self.ui.editConfig.setText(data)
+        html = highlight(data, IniLexer(), HtmlFormatter(full=True, style='colorful'))
+        self.ui.editConfig.setHtml(html)
         self.statusbar_msg("Poll for '%s' configuration values complete" % filename)
 
     def buttonConfigurationMark_clicked(self):
@@ -1328,7 +1339,8 @@ class MainWindow(QtGui.QMainWindow):
         # Send REST API query and display results
         try:
             result = self.splunkd.rest_call(uri, method, output_format='plaintext', body_input=body_input, **parameters)
-            self.ui.editRestResult.setText(result)
+            html = highlight(result, XmlLexer(), HtmlFormatter(full=True, style='colorful'))
+            self.ui.editRestResult.setHtml(html)
         except:
             return
 

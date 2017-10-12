@@ -28,6 +28,9 @@ Changelog:
 2017.05.10 - initial public version
 2017.07.18 - added REST captures of data input ports and additional cluster values
 2017.08.12 - migrated report_builder method to Splunkd class
+2017.10.12 - added Adjacencies category in Report tab, listing all known Splunk instances directly interfacing with the
+             current instance;
+             merged Deployment category in Report tab into the Adjacencies category
 """
 
 import re
@@ -39,7 +42,7 @@ import splunklib.client as client
 import splunklib.data as data
 import splunklib.results as results
 
-__version__ = '2017.07.18'
+__version__ = '2017.10.12'
 
 SPLUNK_HOST = 'localhost'
 SPLUNK_PORT = 8089
@@ -115,12 +118,14 @@ class Splunkd:
         self.rawtcp_ports = []
         self._services_data_inputs_udp = None
         self.udp_ports = []
+        self._services_data_outputs_tcp_server = None
+        self.forward_servers = []
 
         # get_services_kvstore()
         self._services_kvstore_status = None
         self.kvstore_port = 0
 
-        # get_services_cluster_master()
+        # get_services_cluster()
         self._services_cluster_config = None
         self.cluster_master_uri = '(unknown)'
         self.cluster_mode = '(unknown)'
@@ -169,6 +174,19 @@ class Splunkd:
         self.shcluster_initialized = None
         self._services_shcluster_member_members = None
         self.shcluster_members = []
+
+        # get_services_deployment()
+        self._services_deployment_server_clients = None
+        self.deployment_clients = []
+
+        # get_services_licenser()
+        self._services_licenser_slaves = None
+        self.license_slaves = []
+        self.license_master = ''
+
+        # get_services_search()
+        self._services_search_distributed_peers = None
+        self.distributedsearch_peers = []
 
         # get_services_server_status()
         self._services_server_status_partitionsspace = None
@@ -564,6 +582,23 @@ class Splunkd:
         except:
             pass
 
+        self.forward_servers = []
+        try:
+            self._services_data_outputs_tcp_server = self.rest_call('/services/data/outputs/tcp/server', count=-1)
+            servers = self._services_data_outputs_tcp_server['feed']['entry']
+            if type(servers) is not list: servers = [servers]
+            for server in servers:
+                server_dict = {
+                    'title': server['title'],
+                    'destHost': server['content']['destHost'],
+                    'destIp': server['content']['destIp'],
+                    'destPort': server['content']['destPort'],
+                    'method': server['content']['method'],
+                    'status': server['content']['status']}
+                self.forward_servers.append(server_dict)
+        except KeyError:
+            pass
+
     def get_services_kvstore(self):
         """GET /services/kvstore/*"""
         try:
@@ -573,7 +608,7 @@ class Splunkd:
         except:
             self.kvstore_port = 0
 
-    def get_services_cluster_master(self):
+    def get_services_cluster(self):
         """GET /services/cluster/*"""
         try:
             self._services_cluster_config = self.rest_call('/services/cluster/config', count=-1)
@@ -825,6 +860,72 @@ class Splunkd:
         except:
             pass
 
+    def get_services_deployment(self):
+        """GET /services/deployment/*"""
+        self.deployment_clients = []
+        try:
+            self._services_deployment_server_clients = self.rest_call('/services/deployment/server/clients', count=-1)
+            clients = self._services_deployment_server_clients['feed']['entry']
+            if type(clients) is not list: clients = [clients]
+            for client in clients:
+                client_dict = {
+                    'guid': client['content']['guid'],
+                    'dns': client['content']['dns'],
+                    'hostname': client['content']['hostname'],
+                    'ip': client['content']['ip'],
+                    'mgmt': client['content']['mgmt'],
+                    'splunkVersion': client['content']['splunkVersion']}
+                self.deployment_clients.append(client_dict)
+        except KeyError:
+            pass
+
+    def get_services_licenser(self):
+        """GET /services/licenser/*"""
+        self.license_slaves = []
+        try:
+            self._services_licenser_slaves = self.rest_call('/services/licenser/slaves', count=-1)
+            slaves = self._services_licenser_slaves['feed']['entry']
+            if type(slaves) is not list: slaves = [slaves]
+            for slave in slaves:
+                slave_dict = {
+                    'title': slave['title'],
+                    'active_pool_ids': slave['content']['active_pool_ids'],
+                    'label': slave['content']['label'],
+                    'pool_ids': slave['content']['pool_ids'],
+                    'stack_ids': slave['content']['stack_ids'],
+                    'warning_count': slave['content']['warning_count']}
+                self.license_slaves.append(slave_dict)
+        except KeyError:
+            pass
+
+        try:
+            masteruri = self.rest_call('/services/properties/server/license/master_uri', count=-1)
+            if masteruri == 'self':
+                masteruri = '(self)'
+            if '://' in masteruri:  # Parse host:port from URI
+                masteruri = re.findall(r"^(([^:/?#]+):)?(//([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?", masteruri)[0][3]
+            self.license_master = masteruri
+        except:
+            self.license_master = ''
+
+    def get_services_search(self):
+        """GET /services/search/*"""
+        self.distributedsearch_peers = []
+        try:
+            self._services_search_distributed_peers = self.rest_call('/services/search/distributed/peers', count=-1)
+            peers = self._services_search_distributed_peers['feed']['entry']
+            if type(peers) is not list: peers = [peers]
+            for peer in peers:
+                peer_dict = {
+                    'guid': peer['content']['guid'],
+                    'peerName': peer['content']['peerName'],
+                    'peerType': peer['content']['peerType'],
+                    'status': peer['content']['status'],
+                    'version': peer['content']['version']}
+                self.distributedsearch_peers.append(peer_dict)
+        except KeyError:
+            pass
+
     def get_services_server_status(self):
         """GET /services/server/status/*"""
         # Disk Partitions
@@ -988,6 +1089,8 @@ class Splunkd:
 
         # Convenience function to add individual entries to the report
         def report_append(category, name, health, value):
+            if value == '(none)':
+                value = ''
             self.report.append({
                 'category': category,
                 'name': name,
@@ -1062,15 +1165,6 @@ class Splunkd:
                 health = 'OK'
                 value = 'None'
             report_append('Server', 'Messages', health, value)
-
-        # Ports
-        report_append('Ports', 'Management Port', 'N/A', str(self.mgmt_port))
-        report_append('Ports', 'Web Port', 'N/A', str(self.http_port))
-        report_append('Ports', 'Receiving Ports', 'N/A', ', '.join(map(str, self.receiving_ports)))
-        report_append('Ports', 'TCP Input Ports', 'N/A', ', '.join(map(str, self.rawtcp_ports)))
-        report_append('Ports', 'UDP Input Ports', 'N/A', ', '.join(map(str, self.udp_ports)))
-        report_append('Ports', 'Replication Port', 'N/A', str(self.cluster_replicationport))
-        report_append('Ports', 'KV Store Port', 'N/A', str(self.kvstore_port))
 
         #  Resources
         if healthchecks['cpu_cores_caution']:
@@ -1151,10 +1245,48 @@ class Splunkd:
                 value = '?'
             report_append('Resources', 'Disk Usage', health, value)
 
-        # Deployment
-        report_append('Deployment', 'Client of Deployment Server', 'N/A', self.deployment_server)
-        report_append('Deployment', 'Cluster Master', 'N/A', self.cluster_master_uri)
-        report_append('Deployment', 'Fetch from SHC Deployer', 'N/A', self.shcluster_deployer)
+        # Ports
+        report_append('Ports', 'Management Port', 'N/A', str(self.mgmt_port))
+        report_append('Ports', 'Web Port', 'N/A', str(self.http_port))
+        report_append('Ports', 'Receiving Ports', 'N/A', ', '.join(map(str, self.receiving_ports)))
+        report_append('Ports', 'TCP Input Ports', 'N/A', ', '.join(map(str, self.rawtcp_ports)))
+        report_append('Ports', 'UDP Input Ports', 'N/A', ', '.join(map(str, self.udp_ports)))
+        report_append('Ports', 'Replication Port', 'N/A', str(self.cluster_replicationport))
+        report_append('Ports', 'KV Store Port', 'N/A', str(self.kvstore_port))
+
+        # Adjacencies
+        deployment_clients = []
+        for deployment_client in self.deployment_clients:
+            dns_mgmt_pair = '%s:%s' % (deployment_client['dns'], deployment_client['mgmt'])
+            deployment_clients.append(dns_mgmt_pair)
+        cluster_searchheads = []
+        for cluster_searchhead in self.cluster_searchheads:
+            cluster_searchheads.append(cluster_searchhead['location'])
+        distributedsearch_peers = []
+        for distributedsearch_peer in self.distributedsearch_peers:
+            distributedsearch_peers.append(distributedsearch_peer['peerName'])
+        forward_servers = []
+        for forward_server in self.forward_servers:
+            forward_servers.append(forward_server['title'])
+        forwarders = []
+        for forwarder in self.cookedtcp_status:
+            forwarders.append(forwarder['source'])
+        license_slaves = []
+        for license_slave in self.license_slaves:
+            license_slaves.append(license_slave['label'])
+
+        report_append('Adjacencies', 'Deployment Server', 'N/A', self.deployment_server)
+        report_append('Adjacencies', 'Deployment Clients', 'N/A', ', '.join(deployment_clients))
+        report_append('Adjacencies', 'IC Master Node', 'N/A', self.cluster_master_uri)
+        report_append('Adjacencies', 'IC Peer Nodes', 'N/A', ', '.join(self.cluster_peers))
+        report_append('Adjacencies', 'IC Search Heads', 'N/A', ', '.join(self.cluster_searchheads))
+        report_append('Adjacencies', 'SHC Deployer', 'N/A', self.shcluster_deployer)
+        report_append('Adjacencies', 'SHC Members', 'N/A', ', '.join(self.shcluster_members))
+        report_append('Adjacencies', 'Search Peers', 'N/A', ', '.join(distributedsearch_peers))
+        report_append('Adjacencies', 'Receivers (Forward Servers)', 'N/A', ', '.join(forward_servers))
+        report_append('Adjacencies', 'Forwarders (Cooked TCP Connections)', 'N/A', ', '.join(forwarders))
+        report_append('Adjacencies', 'License Master', 'N/A', self.license_master)
+        report_append('Adjacencies', 'License Slaves', 'N/A', ', '.join(license_slaves))
 
         # Indexer Cluster
         if 'cluster_master' in self.roles:
@@ -1237,3 +1369,4 @@ class Splunkd:
         # Counts
         report_append('Counts', 'Messages', 'N/A', str(len(self.messages)))
         report_append('Counts', 'Apps', 'N/A', str(len(self.apps)))
+        report_append('Counts', 'Forwarders', 'N/A', str(len(self.cookedtcp_status)))

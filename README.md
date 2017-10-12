@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2017.10.10  
+Misner Splunk Tool v2017.10.12
 by Joe Misner  
 http://tools.misner.net/  
 
@@ -152,7 +152,8 @@ The following dependencies are required to build the application:
 - Python module 'PySide' v1.2.4, https://pypi.python.org/pypi/PySide
 - Python package 'requests' v2.9.1, https://pypi.python.org/pypi/requests
 - Python module 'splunk-sdk' v1.6.0, https://pypi.python.org/pypi/splunk-sdk
-- Python module 'markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
+- Python module 'Markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
+- Python module 'Pygments' v2.2.0, https://pypi.python.org/pypi/Pygments
 
 Steps:
 
@@ -266,6 +267,12 @@ Changelog
 
  * fixed Save Report broken after migrating report_builder method
  * Help dialog replaced with modal window displaying README.md markdown
+
+2017.10.12
+
+ * added Adjacencies category in Report tab, listing all known Splunk instances directly interfacing with the current instance
+ * merged Deployment category in Report tab into the Adjacencies category
+ * added syntax highlighting to Configuration and REST API tab's code using Pygments
 
 
 
