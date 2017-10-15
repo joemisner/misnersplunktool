@@ -3,7 +3,8 @@
 # Files to include in collection
 added_files1 = [
   ('README.md', '.' ),
-  ('LICENSE.txt', '.' )
+  ('LICENSE.txt', '.' ),
+  ('discovery.csv', '.' )
 ]
 
 a = Analysis(

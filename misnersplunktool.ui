@@ -2669,8 +2669,9 @@ required:</string>
     </property>
     <addaction name="actionRestartSplunkd"/>
     <addaction name="actionRefreshConfigurations"/>
-    <addaction name="separator"/>
     <addaction name="actionChangeDeploymentServer"/>
+    <addaction name="separator"/>
+    <addaction name="actionDiscoveryReport"/>
    </widget>
    <addaction name="menuFile"/>
    <addaction name="menuTools"/>
@@ -2767,6 +2768,11 @@ required:</string>
   <action name="actionSaveReport">
    <property name="text">
     <string>Save Report</string>
+   </property>
+  </action>
+  <action name="actionDiscoveryReport">
+   <property name="text">
+    <string>Discovery Report</string>
    </property>
   </action>
  </widget>

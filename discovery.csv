@@ -1,0 +1,4 @@
+# discovery.csv -- Misner Splunk Tool discovery report example CSV file
+address,port,username,password
+1.2.3.4,8089,admin,changeme
+splunk.myhost.com,8089,admin,changeme

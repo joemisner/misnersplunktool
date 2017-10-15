@@ -1,6 +1,6 @@
 #define MyAppName "Misner Splunk Tool"
-#define MyAppVersion "2017.10.12"
-#define MyAppShortVersion "20171012"
+#define MyAppVersion "2017.10.15"
+#define MyAppShortVersion "20171015"
 #define MyAppPublisher "Joe Misner"
 #define MyAppURL "http://tools.misner.net/"
 #define MyAppExeName "misnersplunktool.exe"

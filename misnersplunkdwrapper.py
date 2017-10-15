@@ -31,6 +31,7 @@ Changelog:
 2017.10.12 - added Adjacencies category in Report tab, listing all known Splunk instances directly interfacing with the
              current instance;
              merged Deployment category in Report tab into the Adjacencies category
+2017.10.15 - fixed report code related to adjacencies causing a crash
 """
 
 import re
@@ -42,7 +43,7 @@ import splunklib.client as client
 import splunklib.data as data
 import splunklib.results as results
 
-__version__ = '2017.10.12'
+__version__ = '2017.10.15'
 
 SPLUNK_HOST = 'localhost'
 SPLUNK_PORT = 8089
@@ -850,7 +851,7 @@ class Splunkd:
                     'site': content['site'],
                     'status': content['status'],
                     'artifacts': content['artifact_count'],
-                    'host_port_pair': content['host_port_pair'],
+                    'location': content['host_port_pair'],
                     'last_heartbeat': time.strftime("%m/%d/%Y %I:%M:%S %p",
                                       time.localtime(float(content['last_heartbeat']))),
                     'replication_port': content['replication_port'],
@@ -1256,32 +1257,38 @@ class Splunkd:
 
         # Adjacencies
         deployment_clients = []
+        cluster_peers = []
+        cluster_searchheads = []
+        shcluster_members = []
+        distributedsearch_peers = []
+        forward_servers = []
+        forwarders = []
+        license_slaves = []
         for deployment_client in self.deployment_clients:
             dns_mgmt_pair = '%s:%s' % (deployment_client['dns'], deployment_client['mgmt'])
             deployment_clients.append(dns_mgmt_pair)
-        cluster_searchheads = []
+        for cluster_peer in self.cluster_peers:
+            cluster_peers.append(cluster_peer['location'])
         for cluster_searchhead in self.cluster_searchheads:
             cluster_searchheads.append(cluster_searchhead['location'])
-        distributedsearch_peers = []
+        for shcluster_member in self.shcluster_members:
+            shcluster_members.append(shcluster_member['location'])
         for distributedsearch_peer in self.distributedsearch_peers:
             distributedsearch_peers.append(distributedsearch_peer['peerName'])
-        forward_servers = []
         for forward_server in self.forward_servers:
             forward_servers.append(forward_server['title'])
-        forwarders = []
         for forwarder in self.cookedtcp_status:
             forwarders.append(forwarder['source'])
-        license_slaves = []
         for license_slave in self.license_slaves:
             license_slaves.append(license_slave['label'])
 
         report_append('Adjacencies', 'Deployment Server', 'N/A', self.deployment_server)
         report_append('Adjacencies', 'Deployment Clients', 'N/A', ', '.join(deployment_clients))
         report_append('Adjacencies', 'IC Master Node', 'N/A', self.cluster_master_uri)
-        report_append('Adjacencies', 'IC Peer Nodes', 'N/A', ', '.join(self.cluster_peers))
-        report_append('Adjacencies', 'IC Search Heads', 'N/A', ', '.join(self.cluster_searchheads))
+        report_append('Adjacencies', 'IC Peer Nodes', 'N/A', ', '.join(cluster_peers))
+        report_append('Adjacencies', 'IC Search Heads', 'N/A', ', '.join(cluster_searchheads))
         report_append('Adjacencies', 'SHC Deployer', 'N/A', self.shcluster_deployer)
-        report_append('Adjacencies', 'SHC Members', 'N/A', ', '.join(self.shcluster_members))
+        report_append('Adjacencies', 'SHC Members', 'N/A', ', '.join(shcluster_members))
         report_append('Adjacencies', 'Search Peers', 'N/A', ', '.join(distributedsearch_peers))
         report_append('Adjacencies', 'Receivers (Forward Servers)', 'N/A', ', '.join(forward_servers))
         report_append('Adjacencies', 'Forwarders (Cooked TCP Connections)', 'N/A', ', '.join(forwarders))

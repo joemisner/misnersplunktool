@@ -36,6 +36,7 @@ import datetime
 import traceback
 import math
 import re
+import csv
 import ConfigParser
 import markdown
 from pygments import highlight
@@ -44,9 +45,10 @@ from pygments.formatters import HtmlFormatter
 import splunklib.binding as binding
 from PySide import QtCore, QtGui, QtWebKit
 from misnersplunktoolui import Ui_MainWindow
+from misnersplunktooldiscoveryreportui import Ui_DiscoveryReportWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2017.10.12'
+__version__ = '2017.10.15'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -372,6 +374,7 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.actionRestartSplunkd.triggered.connect(self.actionRestartSplunkd_clicked)
         self.ui.actionRefreshConfigurations.triggered.connect(self.actionRefreshConfigurations_clicked)
         self.ui.actionChangeDeploymentServer.triggered.connect(self.actionChangeDeploymentServer_clicked)
+        self.ui.actionDiscoveryReport.triggered.connect(self.actionDiscoveryReport_clicked)
         self.ui.actionHelp.triggered.connect(self.actionHelp_triggered)
         self.ui.actionAbout.triggered.connect(self.actionAbout_triggered)
         #  Top
@@ -499,12 +502,15 @@ class MainWindow(QtGui.QMainWindow):
             return False
 
     def information_msg(self, msg):
+        """Creates an information dialog"""
         QtGui.QMessageBox.information(self, "Misner Splunk Tool", msg)
 
     def warning_msg(self, msg):
+        """Creates a warning dialog"""
         QtGui.QMessageBox.warning(self, "Misner Splunk Tool", msg)
 
     def critical_msg(self, msg):
+        """Creates a critical dialog"""
         QtGui.QMessageBox.critical(self, "Misner Splunk Tool", msg)
 
     def pull_configs(self):
@@ -773,6 +779,7 @@ class MainWindow(QtGui.QMainWindow):
                               "%s" % e)
             return
 
+        # Build instance report
         self.statusbar_msg('Building report...')
         self.splunkd.report_builder(self.healthchecks)
 
@@ -967,7 +974,7 @@ class MainWindow(QtGui.QMainWindow):
             self.table_builder(
                 self.ui.tableSHClusterMembers,
                 self.splunkd.shcluster_members,
-                ['label', 'site', 'status', 'artifacts', 'host_port_pair', 'last_heartbeat', 'replication_port',
+                ['label', 'site', 'status', 'artifacts', 'location', 'last_heartbeat', 'replication_port',
                       'restart_required', 'guid']
             )
 
@@ -1042,7 +1049,7 @@ class MainWindow(QtGui.QMainWindow):
             return
 
         local_datetime_full = time.strftime("%m/%d/%Y %I:%M:%S %p", time.localtime())
-        local_datetime_short = time.strftime("%Y%m%d-%I%M%S", time.localtime())
+        local_datetime_short = time.strftime("%Y%m%d-%H%M%S", time.localtime())
         server = self.splunkd.server_name if self.splunkd.server_name else self.splunkd.mgmt_host
         default_filename = "%s %s" % (local_datetime_short, server)
 
@@ -1052,10 +1059,10 @@ class MainWindow(QtGui.QMainWindow):
             return
 
         try:
-        # Built report text
+            # Build report text
             report = ""
             report += "# Misner Splunk Tool v%s by Joe Misner - http://tools.misner.net/\n" % __version__
-            report += "# Report produced %s\n" % local_datetime_full
+            report += "# Instance Report produced %s\n" % local_datetime_full
             report += "Category,Name,Health,Value\n"
             for entry in self.splunkd.report:
                 report += "%s,%s,%s,%s\n" % (entry['category'], entry['name'], entry['health'],
@@ -1064,7 +1071,7 @@ class MainWindow(QtGui.QMainWindow):
             # Save file
             with open(filename, 'w') as f:
                 f.write(report)
-            self.information_msg("Report saved to location:\n%s" % filename)
+            self.information_msg("Report saved to location:\n%s" % filename.replace('/', '\\'))
         except:
             self.warning_msg("Exception while building report.")
 
@@ -1290,6 +1297,10 @@ class MainWindow(QtGui.QMainWindow):
             else:
                 self.poll()
 
+    def actionDiscoveryReport_clicked(self):
+        """Shows DiscoveryReportWindow()"""
+        discoveryreport_window.show()
+
     def checkCluster_clicked(self):
         """Returns any clicked check boxes in Indexer Cluster tab back to actual values"""
         self.ui.checkClusterDataSearchable.setChecked(self.splunkd.cluster_alldatasearchable)
@@ -1353,6 +1364,316 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.comboRestURI.addItem(combobox_text)
 
 
+class DiscoveryReportWindow(QtGui.QMainWindow):
+    """Object class for the main window"""
+    def __init__(self):
+        """Executed when the DiscoveryReportWindow() object is created"""
+        # GUI Setup
+        QtGui.QMainWindow.__init__(self)
+        self.ui = Ui_DiscoveryReportWindow()
+        self.ui.setupUi(self)
+        self.ui.tableInstances.setColumnWidth(0, 150)  # Address
+        self.ui.tableInstances.setColumnWidth(1, 150)  # Status
+
+        # Threading Setup
+        self.threadWorker = DiscoveryReportWorker()
+
+        # Signals and Slots
+        self.ui.buttonCsvBrowse.clicked.connect(self.buttonCsvBrowse_clicked)
+        self.ui.buttonReset.clicked.connect(self.buttonReset_clicked)
+        self.ui.buttonToggle.clicked.connect(self.buttonToggle_clicked)
+        self.threadWorker.updatestatusbar[str].connect(self.threadWorker_updatestatusbar)
+        self.threadWorker.updatetable[dict].connect(self.threadWorker_updatetable)
+        self.threadWorker.complete[dict].connect(self.threadWorker_complete)
+
+        self.cleanup()
+
+    def closeEvent(self, event):
+        """Executed when the DiscoveryReportWindow() object is closed"""
+        self.cleanup()
+
+    def statusbar_msg(self, msg):
+        """Sends a message to the statusbar"""
+        self.ui.statusbar.showMessage(msg)
+
+    def information_msg(self, msg):
+        """Creates an information dialog"""
+        QtGui.QMessageBox.information(self, "Discovery Report", msg)
+
+    def warning_msg(self, msg):
+        """Creates a warning dialog"""
+        QtGui.QMessageBox.warning(self, "Discovery Report", msg)
+
+    def critical_msg(self, msg):
+        """Creates a critical dialog"""
+        QtGui.QMessageBox.critical(self, "Discovery Report", msg)
+
+    def cleanup(self):
+        """Clear widgets and associated objects from this window"""
+        self.ui.editCsvFilename.setText(None)
+        self.ui.tableInstances.setRowCount(0)
+        self.ui.buttonCsvBrowse.setEnabled(True)
+        self.ui.buttonToggle.setEnabled(True)
+        self.ui.buttonToggle.setText('Start')
+        self.statusbar_msg(None)
+        self.filename = None
+        self.instances = None
+        self.threadWorker.quit()
+        self.threadWorker.stopexecution = True
+
+    def buttonCsvBrowse_clicked(self):
+        """Selects the CSV file completed with Splunk instances and loads into memory, checking for syntax errors"""
+        try:
+            # Choose and load CSV file
+            self.filename, _ = QtGui.QFileDialog.getOpenFileName(self, "Select CSV File", os.path.dirname(sys.argv[0]),
+                                                                 "Comma-Separated Value Files (*.csv)")
+            if not self.filename:
+                return
+            self.ui.editCsvFilename.setText(self.filename.replace('/', '\\'))
+            with open(self.filename, 'rb') as f:
+                reader = csv.reader(f)
+                csvfile = list(reader)
+
+            # Build self.instances object with Splunk instances listed in the CSV file
+            self.instances = []
+            line_number = 0
+            for line in csvfile:
+                line_number += 1
+                if not line:  # Blank line
+                    continue
+                if line[0][0] == '#':  # Comments
+                    continue
+                if line[0] == 'address':  # CSV header
+                    continue
+                if len(line) != 4:  # Not 4 comma-separated values
+                    self.critical_msg("Error on line %s of '%s':\n\nMust have four comma-separated values."
+                                      % (line_number, self.filename))
+                    self.cleanup()
+                    return
+                self.instances.append({
+                    'address': line[0],
+                    'port': int(line[1]),
+                    'username': line[2],
+                    'password': line[3].strip()
+                })
+
+            # Load instances into table
+            table = self.ui.tableInstances
+            table.setRowCount(len(self.instances))
+            row_number = 0
+            for instance in self.instances:
+                # Address column
+                host_port_pair = '%s:%s' % (instance['address'], instance['port'])
+                table.setItem(row_number, 0, QtGui.QTableWidgetItem())
+                table.item(row_number, 0).setText(host_port_pair)
+                # Status column
+                table.setItem(row_number, 1, QtGui.QTableWidgetItem())
+                table.item(row_number, 1).setText("Pending")
+                row_number += 1
+        except:
+            self.critical_msg("Unspecified error while loading file '%s'" % self.filename)
+            self.cleanup()
+
+    def buttonReset_clicked(self):
+        """Reset the Discovery Report window"""
+        self.cleanup()
+
+    def buttonToggle_clicked(self):
+        """Start or stop execution of the discovery report"""
+        if self.threadWorker.isRunning():
+            # Cancel execution of discovery report
+            self.statusbar_msg("Stopping discovery thread...")
+            self.ui.buttonCsvBrowse.setEnabled(False)
+            self.ui.buttonToggle.setEnabled(False)
+            self.threadWorker.mutex.lock()
+            self.threadWorker.stopexecution = True
+            self.threadWorker.mutex.unlock()
+        else:
+            # Begin execution of discovery report
+            if not self.instances:
+                self.critical_msg("CSV file not loaded")
+                return
+            self.statusbar_msg("Executing discovery report...")
+            self.ui.buttonToggle.setText("Stop")
+            self.threadWorker.mutex.lock()
+            self.threadWorker.stopexecution = False
+            self.threadWorker.mutex.unlock()
+            self.threadWorker.instancedata.emit(self.instances)
+            self.threadWorker.start()
+
+    def threadWorker_updatestatusbar(self, msg):
+        """Update the statusbar with a message from the worker thread"""
+        self.statusbar_msg(msg)
+
+    def threadWorker_updatetable(self, msg):
+        """Update the table's status column with a message from the worker thread"""
+        self.ui.tableInstances.item(msg['row'], 1).setText(msg['text'])
+
+    def threadWorker_complete(self, splunkd_polls):
+        """Called when the worker thread is done polling Splunk instances"""
+        self.statusbar_msg("Complete")
+        self.information_msg("Discovery Report generation complete. "
+                                               "Choose a destination for the report in the following dialog.")
+        self.ui.buttonCsvBrowse.setEnabled(False)
+        self.ui.buttonToggle.setEnabled(False)
+
+        # Get destination filename for report
+        local_datetime_full = time.strftime("%m/%d/%Y %I:%M:%S %p", time.localtime())
+        local_datetime_short = time.strftime("%Y%m%d-%H%M%S", time.localtime())
+        default_filename = "%s Discovery Report" % local_datetime_short
+        filename, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Discovery Report",
+                                                        os.path.join(SCRIPT_DIR, default_filename),
+                                                        "CSV (Comma delimited) (*.csv);;All Files (*.*)")
+        if not filename:
+            return
+
+        # Build report
+        try:
+            # Build report text
+            report = ""
+            report += "# Misner Splunk Tool v%s by Joe Misner - http://tools.misner.net/\n" % __version__
+            report += "# Discovery Report produced %s\n" % local_datetime_full
+
+            # Get "category / name" columns from a successful splunkd's report to build the header, then break
+            header = []
+            for instance in splunkd_polls:
+                if splunkd_polls[instance].report:
+                    for entry in splunkd_polls[instance].report:
+                        header.append('%s: %s' % (entry['category'], entry['name']))
+                    report += "%s\n" % ','.join(header)
+                    break
+
+            # Pull values from each instance into a comma-separated string
+            for instance in splunkd_polls:
+                entries = []
+                for entry in splunkd_polls[instance].report:
+                    entries.append(str(entry['value']).replace(',', ';'))
+                report += "%s\n" % ','.join(entries)
+
+            # Save file
+            with open(filename, 'w') as f:
+                f.write(report)
+                self.information_msg("Report saved to location:\n%s" % filename.replace('/', '\\'))
+        except:
+            self.warning_msg("Exception while building report.")
+
+
+class DiscoveryReportWorker(QtCore.QThread):
+    """Executes the Discovery Report on it's own worker thread"""
+    instancedata = QtCore.Signal(list)
+    #stopexecution = QtCore.Signal(bool)
+    updatestatusbar = QtCore.Signal(str)
+    updatetable = QtCore.Signal(dict)
+    complete = QtCore.Signal(dict)
+    mutex = QtCore.QMutex()
+
+    def __init__(self):
+        QtCore.QThread.__init__(self)
+        self.instancedata[list].connect(self.writeinstancedata)
+        self.stopexecution = True
+
+    def __del__(self):
+        self.wait()
+
+    def writeinstancedata(self, instances):
+        self.instances = instances
+
+    def run(self):
+        self.poll()
+
+    def poll(self):
+        """Execute the discovery report, polling all Splunk instances"""
+        # Iterate through instances
+        splunkd_polls = {}
+        instance_number = 0
+        for instance in self.instances:
+            if self.stopexecution:
+                self.updatestatusbar.emit('Cancelled')
+                return
+
+            instance_number += 1
+            self.updatestatusbar.emit("Running discovery report (instance %s of %s)..." \
+                                      % (instance_number, len(discoveryreport_window.instances)))
+
+            splunk_host = instance['address']
+            splunk_port = instance['port']
+            splunk_user = instance['username']
+            splunk_pass = instance['password']
+
+            host = "%s:%s" % (splunk_host, splunk_port)
+            row_number = instance_number - 1
+
+            def instance_status(msg):
+                self.updatetable.emit({'row': row_number, 'text': msg})
+
+            # Create Splunk instance
+            instance_status("Connecting...")
+            try:
+                splunkd = Splunkd(splunk_host, splunk_port, splunk_user, splunk_pass)
+            except binding.AuthenticationError:
+                instance_status("Failed: Authentication error")
+                continue
+            except socket.gaierror:
+                instance_status("Failed: Unable to connect")
+                continue
+            except socket.error as error:
+                instance_status("Failed: Unable to connect (%s)" % error)
+                continue
+            except:
+                instance_status("Failed: Unable to connect (unknown exception)")
+                continue
+            instance_status("Connected")
+
+            # Poll Splunk instance
+            try:
+                instance_status('Polling service info...')
+                splunkd.poll_service_info()
+                instance_status('Polling settings...')
+                splunkd.poll_service_settings()
+                instance_status('Polling messages...')
+                splunkd.poll_service_messages()
+                instance_status('Polling configurations...')
+                splunkd.get_service_confs()
+                instance_status('Polling input status...')
+                splunkd.get_services_admin_inputstatus()
+                instance_status('Polling apps...')
+                splunkd.poll_service_apps()
+                instance_status('Polling data collection info...')
+                splunkd.get_services_data()
+                instance_status('Polling KV store info...')
+                splunkd.get_services_kvstore()
+                instance_status('Polling cluster master info...')
+                splunkd.get_services_cluster()
+                instance_status('Polling search head cluster info...')
+                splunkd.get_services_shcluster()
+                instance_status('Polling deployment info...')
+                splunkd.get_services_deployment()
+                instance_status('Polling licensing info...')
+                splunkd.get_services_licenser()
+                instance_status('Polling distributed search info...')
+                splunkd.get_services_search()
+                instance_status('Polling introspection...')
+                splunkd.get_services_server_status()
+            except socket.error as e:
+                instance_status("Failed: Socket error while attempting to poll splunkd:\n%s" % e)
+                continue
+
+            # Build instance report
+            instance_status('Building instance report...')
+            try:
+                splunkd.report_builder(main_window.healthchecks)
+            except:
+                instance_status("Failed: Unable to build instance report")
+                continue
+
+            # Success
+            splunkd_polls[host] = splunkd
+            instance_status("Complete")
+
+        self.complete.emit(splunkd_polls)
+        self.quit()
+
+
 class HelpWindow(QtWebKit.QWebView):
     """Object class for the help window"""
     def __init__(self):
@@ -1399,5 +1720,6 @@ if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     main_window = MainWindow()
     help_window = HelpWindow()
+    discoveryreport_window = DiscoveryReportWindow()
 
     sys.exit(app.exec_())

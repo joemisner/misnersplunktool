@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2017.10.12
+Misner Splunk Tool v2017.10.15
 by Joe Misner  
 http://tools.misner.net/  
 
@@ -59,6 +59,16 @@ Only works on Splunk Enterprise instances.
 This is useful for remote Universal Forwarder installations, allowing
 you to enable the deployment client, change the deployment server URI,
 and restart splunkd on the current instance.
+
+**Discovery Report**
+
+This comprehensive tool connects to multiple Splunk instances, creating
+a combined report of polled values across a deployment. The contents of
+this report is identical to the Report tab of an individual instance.
+
+To run this tool, a CSV file first needs to be completed in the format
+as included in the "discovery.csv" file located in this application's
+installation directory.
 
 ### Tabs ###
 
@@ -273,6 +283,11 @@ Changelog
  * added Adjacencies category in Report tab, listing all known Splunk instances directly interfacing with the current instance
  * merged Deployment category in Report tab into the Adjacencies category
  * added syntax highlighting to Configuration and REST API tab's code using Pygments
+
+2017.10.15
+
+ * fixed report code related to adjacencies causing a crash
+ * added Discovery Report tool for creating a combined report of multiple Splunk instances at once
 
 
 
