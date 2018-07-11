@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2017.10.15
+Misner Splunk Tool v2017.10.25
 by Joe Misner  
 http://tools.misner.net/  
 
@@ -60,15 +60,72 @@ This is useful for remote Universal Forwarder installations, allowing
 you to enable the deployment client, change the deployment server URI,
 and restart splunkd on the current instance.
 
-**Discovery Report**
+### Discovery Report ###
 
 This comprehensive tool connects to multiple Splunk instances, creating
 a combined report of polled values across a deployment. The contents of
-this report is identical to the Report tab of an individual instance.
+this report is identical to the Report tab of an individual instance,
+multiplied by all Splunk instances listed. Usage of this report is
+beneficial to document configurations, locate discrepancies, and
+understand adjacencies, among other uses in the discovery process of a
+Splunk environment. In addition to a saved report, the combined instance
+adjacency data can generate a visual topology of the deployment.
 
-To run this tool, a CSV file first needs to be completed in the format
-as included in the "discovery.csv" file located in this application's
-installation directory.
+**Execution**
+
+To run this tool, a CSV file first needs to be completed. The format of
+this file must be as per the following example:
+
+    address,port,username,password
+    1.2.3.4,8089,admin,changeme
+    splunk.myhost.com,8089,admin,changeme
+
+This example is included in the "discovery.csv" file located in the
+Misner Splunk Tool installation directory. This file may be modified and
+selected in the Discovery Report, or copied to another location where
+multiple CSV files in this format can be kept for different Splunk
+deployments.
+
+After a properly formatted CSV file is chosen, each instance listed in
+the file is loaded into the Discovery Report window. When the Start
+button is clicked, a separate thread sequentially polls each Splunk
+instance and gathers data. Once all instances are polled, you may click
+Save Report to save this completed Discovery Report on disk. The
+completed Discovery Report is also in CSV format, and can be loaded into
+spreadsheet software for filtering.
+
+**Topology**
+
+In addition to the saved CSV report, clicking the Topology button will
+generate a visual topology based on the polled data of each instance.
+The Splunk instances are plotted in layers, by default in this order:
+
+- Users
+- Management Consoles
+- SHC Deployers
+- Search Heads
+- Cluster Masters
+- Indexers
+- License Masters
+- Heavy Forwarders
+- Deployment Servers
+- Universal Forwarders
+- Non-Forwarder Inputs
+- Other Instances
+
+This primary role of a Splunk instance is a guess, based on the provided
+roles which the instance is currently participating in, and may not be
+accurate per the design of the deployment. Any new instances that were
+discovered while polling the initial Splunk instances are also plotted,
+and are given the label "Discovered Node" on the topology.
+
+Instance node and adjacency colors among many other options are all
+customizable in the Misner Splunk Tool configuration. These options
+allow for tweaking to paint the topology to suit your needs.
+
+After the topology is built, the window can be used to stretch, zoom,
+and pan the image as needed. The topology can then be saved to disk by
+clicking the floppy disk icon, and choosing a format such as PDF or PNG.
 
 ### Tabs ###
 
@@ -85,8 +142,8 @@ deployment information, and current messages.
 Gathers polled values into a report that contains discovery and health
 information on a single table. Health values are determined by the
 metrics listed in the configuration file, or defaults if not defined.
-This table can be exported to CSV by going to the "File > Save Report"
-menu.
+This table can be exported to CSV by going to the "File > Save Instance
+Report" menu.
 
 See the `misnersplunktool.conf` configuration to make changes to values
 that flag a value into Caution or Warning status.
@@ -164,6 +221,8 @@ The following dependencies are required to build the application:
 - Python module 'splunk-sdk' v1.6.0, https://pypi.python.org/pypi/splunk-sdk
 - Python module 'Markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
 - Python module 'Pygments' v2.2.0, https://pypi.python.org/pypi/Pygments
+- Python module 'networkx' v2.0, https://pypi.python.org/pypi/networkx
+- Python module 'matplotlib' v2.1.0, https://pypi.python.org/pypi/matplotlib
 
 Steps:
 
@@ -288,6 +347,13 @@ Changelog
 
  * fixed report code related to adjacencies causing a crash
  * added Discovery Report tool for creating a combined report of multiple Splunk instances at once
+
+2017.10.25
+
+ * added Topology view to Discovery Report tool
+ * fixed Tools menu code not checking for inactive splunkd connection and causing a crash
+ * disabled QWebView right-click menu which incorrectly displayed a "Reload" action
+ * misc code cleanup
 
 
 

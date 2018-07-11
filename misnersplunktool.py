@@ -24,7 +24,10 @@ Dependencies:
 - Python module 'PySide' v1.2.4, https://pypi.python.org/pypi/PySide
 - Python module 'Markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
 - Python module 'Pygments' v2.2.0, https://pypi.python.org/pypi/Pygments
+- Python module 'networkx' v2.0, https://pypi.python.org/pypi/networkx
+- Python module 'matplotlib' v2.1.0, https://pypi.python.org/pypi/matplotlib
 - Python module 'misnersplunktoolui.py'
+- Python module 'misnersplunktooldiscoveryreportui.py'
 - Python module 'misnersplunkdwrapper.py'
 """
 
@@ -39,6 +42,8 @@ import re
 import csv
 import ConfigParser
 import markdown
+import networkx
+import matplotlib.pyplot
 from pygments import highlight
 from pygments.lexers import XmlLexer, IniLexer
 from pygments.formatters import HtmlFormatter
@@ -48,7 +53,7 @@ from misnersplunktoolui import Ui_MainWindow
 from misnersplunktooldiscoveryreportui import Ui_DiscoveryReportWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2017.10.15'
+__version__ = '2017.10.25'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -98,6 +103,83 @@ shcluster_rollingrestart_caution=true  # boolean
 shcluster_serviceready_warning=true  # boolean
 shcluster_minpeersjoined_warning=true  # boolean
 
+# Settings used to create Discovery Report topology nodes and adjacencies
+# layerheight_ settings determine the y-coordinate layer height or the plotted instance role, from 0-100
+# layeralignment_ settings determine if nodes on the layer are aligned to the left, center, or right
+# nodecolor_ and adjcolor_ settings use hex color codes, starting with a hash
+# nodedraw_ and adjdraw_ settings use boolean values of true or false to determine if they are displayed
+[topology]
+fontsize=8  # integer
+static_width=10  # integer, width in plotted points that nodes on a left- or right-aligned layer are spaced apart
+layerheight_user=100  # integer, Users
+layerheight_mc=94  # integer, Management Consoles
+layerheight_shcd=88  # integer, SHC Deployers
+layerheight_sh=80  # integer, Search Heads
+layerheight_cm=68  # integer, Cluster Masters
+layerheight_idx=60  # integer, Indexers
+layerheight_lm=50  # integer, License Masters
+layerheight_hf=40  # integer, Heavy Forwarders
+layerheight_ds=30  # integer, Deployment Servers
+layerheight_uf=20  # integer, Universal Forwarders
+layerheight_input=10  # integer, Non-Forwarder Inputs
+layerheight_other=0  # integer, Other Instances
+layeralignment_user=center
+layeralignment_mc=right
+layeralignment_shcd=left
+layeralignment_sh=center
+layeralignment_cm=left
+layeralignment_idx=center
+layeralignment_lm=right
+layeralignment_hf=center
+layeralignment_ds=left
+layeralignment_uf=center
+layeralignment_input=center
+layeralignment_other=center
+nodecolor_user=d5d8dc
+nodecolor_searchhead=abebc6
+nodecolor_indexer=aed6f1
+nodecolor_heavyforwarder=d98880
+nodecolor_universalforwarder=f5b7b1
+nodecolor_mgmtconsole=abebc6
+nodecolor_shcdeployer=d2b4de
+nodecolor_clustermaster=fad7a0
+nodecolor_deploymentserver=d7bde2
+nodecolor_licensemaster=f9e79f
+nodecolor_inputs=e6b0aa
+nodecolor_others=d6dbdf
+adjcolor_web=808b96
+adjcolor_clustermgmt=f8c471
+adjcolor_distsearch=82e0aa
+adjcolor_mgmtconsole=82e0aa
+adjcolor_bucketrep=85c1e9
+adjcolor_datafwd=d98880
+adjcolor_shcdeployment=bb8fce
+adjcolor_deployment=c39bd3
+adjcolor_license=f7dc6f
+nodedraw_user=true
+nodedraw_searchhead=true
+nodedraw_indexer=true
+nodedraw_heavyforwarder=true
+nodedraw_universalforwarder=true
+nodedraw_mgmtconsole=True
+nodedraw_shcdeployer=true
+nodedraw_clustermaster=true
+nodedraw_deploymentserver=true
+nodedraw_licensemaster=true
+nodedraw_inputs=true
+nodedraw_others=true
+adjdraw_web=true
+adjdraw_clustermgmt=true
+adjdraw_distsearch=true
+adjdraw_mgmtconsole=True
+adjdraw_bucketrep=true
+adjdraw_datafwdheavyforwarder=true
+adjdraw_datafwduniversalforwarder=true
+adjdraw_datafwdinput=true
+adjdraw_shcdeployment=true
+adjdraw_deployment=true
+adjdraw_license=true
+
 # splunkd locations saved in the Address combo box
 # Create separate stanzas for each saved splunkd location, including the ip/host and management port
 # Optionally include keys with username and/or password to populate these fields when selected
@@ -140,32 +222,104 @@ Click the "Show Details" button below for complete license information.
 """
 
 HEALTHCHECKS = {
-    'version_caution': '6.0',
-    'version_warning': '5.0',
-    'uptime_caution': '604800',
-    'uptime_warning': '86400',
-    'cpu_cores_caution': '12',
-    'mem_capacity_caution': '31744',
-    'http_ssl_caution': 'true',
-    'messages_caution': 'true',
-    'cpu_usage_caution': '80',
-    'cpu_usage_warning': '90',
-    'mem_usage_caution': '80',
-    'mem_usage_warning': '90',
-    'swap_usage_caution': '80',
-    'swap_usage_warning': '90',
-    'diskpartition_usage_caution': '80',
-    'diskpartition_usage_warning': '90',
-    'cluster_maintenance_caution': 'true',
-    'cluster_rollingrestart_caution': 'true',
-    'cluster_alldatasearchable_warning': 'true',
-    'cluster_searchfactor_caution': 'true',
-    'cluster_replicationfactor_caution': 'true',
-    'cluster_peersnotsearchable_warning': 'true',
-    'cluster_searchheadsnotconnected_warning': 'true',
-    'shcluster_rollingrestart_caution': 'true',
-    'shcluster_serviceready_warning': 'true',
-    'shcluster_minpeersjoined_warning': 'true'
+    'version_caution': 6.0,
+    'version_warning': 5.0,
+    'uptime_caution': 604800,
+    'uptime_warning': 86400,
+    'cpu_cores_caution': 12,
+    'mem_capacity_caution': 31744,
+    'http_ssl_caution': True,
+    'messages_caution': True,
+    'cpu_usage_caution': 80,
+    'cpu_usage_warning': 90,
+    'mem_usage_caution': 80,
+    'mem_usage_warning': 90,
+    'swap_usage_caution': 80,
+    'swap_usage_warning': 90,
+    'diskpartition_usage_caution': 80,
+    'diskpartition_usage_warning': 90,
+    'cluster_maintenance_caution': True,
+    'cluster_rollingrestart_caution': True,
+    'cluster_alldatasearchable_warning': True,
+    'cluster_searchfactor_caution': True,
+    'cluster_replicationfactor_caution': True,
+    'cluster_peersnotsearchable_warning': True,
+    'cluster_searchheadsnotconnected_warning': True,
+    'shcluster_rollingrestart_caution': True,
+    'shcluster_serviceready_warning': True,
+    'shcluster_minpeersjoined_warning': True
+}
+TOPOLOGY = {
+    'fontsize': 8,
+    'static_width': 10,
+    'layerheight_user': 100,
+    'layerheight_mc': 94,
+    'layerheight_shcd': 88,
+    'layerheight_sh': 80,
+    'layerheight_cm': 68,
+    'layerheight_idx': 60,
+    'layerheight_lm': 50,
+    'layerheight_hf': 40,
+    'layerheight_ds': 30,
+    'layerheight_uf': 20,
+    'layerheight_input': 10,
+    'layerheight_other': 0,
+    'layeralignment_user': 'center',
+    'layeralignment_mc': 'right',
+    'layeralignment_shcd': 'left',
+    'layeralignment_sh': 'center',
+    'layeralignment_cm': 'left',
+    'layeralignment_idx': 'center',
+    'layeralignment_lm': 'right',
+    'layeralignment_hf': 'center',
+    'layeralignment_ds': 'left',
+    'layeralignment_uf': 'center',
+    'layeralignment_input': 'center',
+    'layeralignment_other': 'center',
+    'nodecolor_user': 'd5d8dc',
+    'nodecolor_searchhead': 'abebc6',
+    'nodecolor_indexer': 'aed6f1',
+    'nodecolor_heavyforwarder': 'd98880',
+    'nodecolor_universalforwarder': 'f5b7b1',
+    'nodecolor_mgmtconsole': 'abebc6',
+    'nodecolor_shcdeployer': 'd2b4de',
+    'nodecolor_clustermaster': 'fad7a0',
+    'nodecolor_deploymentserver': 'd7bde2',
+    'nodecolor_licensemaster': 'f9e79f',
+    'nodecolor_inputs': 'e6b0aa',
+    'nodecolor_others': 'd6dbdf',
+    'adjcolor_web': '808b96',
+    'adjcolor_clustermgmt': 'f8c471',
+    'adjcolor_distsearch': '82e0aa',
+    'adjcolor_mgmtconsole': '82e0aa',
+    'adjcolor_bucketrep': '85c1e9',
+    'adjcolor_datafwd': 'd98880',
+    'adjcolor_shcdeployment': 'bb8fce',
+    'adjcolor_deployment': 'c39bd3',
+    'adjcolor_license': 'f7dc6f',
+    'nodedraw_user': True,
+    'nodedraw_searchhead': True,
+    'nodedraw_indexer': True,
+    'nodedraw_heavyforwarder': True,
+    'nodedraw_universalforwarder': True,
+    'nodedraw_mgmtconsole': True,
+    'nodedraw_shcdeployer': True,
+    'nodedraw_clustermaster': True,
+    'nodedraw_deploymentserver': True,
+    'nodedraw_licensemaster': True,
+    'nodedraw_inputs': True,
+    'nodedraw_others': True,
+    'adjdraw_web': True,
+    'adjdraw_clustermgmt': True,
+    'adjdraw_distsearch': True,
+    'adjdraw_mgmtconsole': True,
+    'adjdraw_bucketrep': True,
+    'adjdraw_datafwdheavyforwarder': True,
+    'adjdraw_datafwduniversalforwarder': True,
+    'adjdraw_datafwdinput': True,
+    'adjdraw_shcdeployment': True,
+    'adjdraw_deployment': True,
+    'adjdraw_license': True
 }
 
 
@@ -252,12 +406,6 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.tableReport.setColumnWidth(1, 170)  # Name
         self.ui.tableReport.setColumnWidth(2, 80)   # Health
         self.ui.tableReport.setColumnWidth(3, 340)  # Value
-
-        #  Configuration tab
-        self.ui.labelHighlighter.setVisible(False)
-        self.ui.editConfigurationFind.setVisible(False)
-        self.ui.buttonConfigurationMark.setVisible(False)
-        self.ui.buttonConfigurationClear.setVisible(False)
 
         #  Input Status tab
         self.ui.tableFileStatus.setColumnWidth(0, 420)  # Location
@@ -390,9 +538,6 @@ class MainWindow(QtGui.QMainWindow):
         #  Report tab
         #  Configuration tab
         self.ui.comboConfig.activated.connect(self.comboConfig_activated)
-        self.ui.editConfigurationFind.returnPressed.connect(self.buttonConfigurationMark_clicked)
-        self.ui.buttonConfigurationMark.clicked.connect(self.buttonConfigurationMark_clicked)
-        self.ui.buttonConfigurationClear.clicked.connect(self.buttonConfigurationClear_clicked)
 
         #  Input Status tab
         #  Apps tab
@@ -421,10 +566,11 @@ class MainWindow(QtGui.QMainWindow):
         # Load misnersplunktool.conf configurations
         # Build health checks dictionary of defaults, in case values in configuration are not present
         self.healthchecks = HEALTHCHECKS
+        self.topology = TOPOLOGY
         try:
             self.pull_configs()
         except:
-            msg = "Error while pulling configurations from misnersplunktool.conf" \
+            msg = "Error while pulling configurations from misnersplunktool.conf\n" \
                   "Check formatting in file. If error persists, delete the file and restart."
             self.critical_msg(msg)
             fatal_error(msg)
@@ -549,12 +695,27 @@ class MainWindow(QtGui.QMainWindow):
                     if '#' in value:
                         value = re.findall(r"^([\.\w]+)\s*#.*$", value)[0]
                 except:  # Some bad formatting broke the regex parser
-                    msg = "Error while pulling configurations from misnersplunktool.conf" \
-                          "Check formatting of [%s] option %s within this file."
+                    msg = "Error while pulling configurations from misnersplunktool.conf\n" \
+                          "Check formatting of [healthchecks] option %s within this file." % option
                     self.critical_msg(msg)
                     fatal_error(msg)
 
                 self.healthchecks[option] = fixtype(value.strip())
+
+        # Pull topology values
+        if config.has_section('topology'):
+            for option in config.options('topology'):
+                value = config.get('topology', option)
+                try:  # Remove comments from key=value pair
+                    if '#' in value:
+                        value = re.findall(r"^([\.\w]+)\s*#.*$", value)[0]
+                except:  # Some bad formatting broke the regex parser
+                    msg = "Error while pulling configurations from misnersplunktool.conf\n" \
+                          "Check formatting of [topology] option %s within this file." % option
+                    self.critical_msg(msg)
+                    fatal_error(msg)
+
+                self.topology[option] = fixtype(value.strip())
 
         # Pull other config values
         if config.has_option('main', 'defaultAddress'):
@@ -789,26 +950,22 @@ class MainWindow(QtGui.QMainWindow):
         for role in self.splunkd.roles:
             roles.append(role)
         self.ui.labelRole.setToolTip('\n'.join(roles))
-        if 'universal_forwarder' in self.splunkd.roles:  # also lightweight_forwarder
-            self.ui.labelRole.setPixmap(':/forwarder.png')
-        elif 'management_console' in self.splunkd.roles:
-            self.ui.labelRole.setPixmap(':/managementconsole.png')
-        elif 'indexer' in self.splunkd.roles:  # also search_peer, cluster_slave
-            self.ui.labelRole.setPixmap(':/indexer.png')
-        elif 'deployment_server' in self.splunkd.roles:  # also shc_deployer
-            self.ui.labelRole.setPixmap(':/deploymentserver.png')
-        elif 'heavyweight_forwarder' in self.splunkd.roles:
-            self.ui.labelRole.setPixmap(':/heavyforwarder.png')
-        elif 'cluster_master' in self.splunkd.roles:
-            self.ui.labelRole.setPixmap(':/masternode.png')
-        elif 'license_master' in self.splunkd.roles:
-            self.ui.labelRole.setPixmap(':/licenseserver.png')
-        elif 'search_head' in self.splunkd.roles:  # also shc_captain, shc_member, cluster_search_head
-            self.ui.labelRole.setPixmap(':/searchhead.png')
-        elif self.splunkd.mode == 'dedicated forwarder':  # older versions of Splunk don't set a role
-            self.ui.labelRole.setPixmap(':/forwarder.png')
-        else:
-            self.ui.labelRole.setPixmap(':/heavyforwarder.png')
+        role_icons = {  # Map this instance's 'guessed' primary role to an appropriate icon
+            "Cluster Master": ':/masternode.png',
+            "Deployer (SHC)": ':/deploymentserver.png',
+            "Deployment Server": ':/deploymentserver.png',
+            "Forwarder": ':/forwarder.png',
+            "Heavy Forwarder": ':/heavyforwarder.png',
+            "Indexer (Cluster Slave)": ':/indexer.png',
+            "Indexer (Standalone)": ':/indexer.png',
+            "License Master": ':/licenseserver.png',
+            "Management Console": ':/managementconsole.png',
+            "Search Head (Standalone)": ':/searchhead.png',
+            "Search Head (SHC Member)": ':/searchhead.png',
+            "Search Head (SHC Captain)": ':/searchhead.png',
+            "Universal Forwarder": ':/forwarder.png'
+        }
+        self.ui.labelRole.setPixmap(role_icons[self.splunkd.primary_role])
 
         # Fill in top labels
         self.statusbar_msg('Populating GUI, top labels...')
@@ -1073,7 +1230,9 @@ class MainWindow(QtGui.QMainWindow):
                 f.write(report)
             self.information_msg("Report saved to location:\n%s" % filename.replace('/', '\\'))
         except:
-            self.warning_msg("Exception while building report.")
+            exc = traceback.format_exception(traceback.format_exception(*sys.exc_info()))
+            msg = "Exception while building report:\n\n%s" % ''.join(exc)
+            self.warning_msg(msg)
 
     def actionSaveCurrentTab_triggered(self):
         """File > Save > Current Tab"""
@@ -1104,7 +1263,6 @@ class MainWindow(QtGui.QMainWindow):
 
     def actionHelp_triggered(self):
         """Help > Help dialog box"""
-        help_window.get_markdown()
         help_window.show()
 
     def actionAbout_triggered(self):
@@ -1144,6 +1302,9 @@ class MainWindow(QtGui.QMainWindow):
         # Check connection with splunkd
         try:
             self.splunkd.service.settings
+        except AttributeError:
+            self.warning_msg("Not connected to splunkd")
+            return
         except binding.AuthenticationError:
             self.disconnect()
             self.critical_msg('Splunk connection reset')
@@ -1163,6 +1324,9 @@ class MainWindow(QtGui.QMainWindow):
         # Check connection with splunkd
         try:
             self.splunkd.service.settings
+        except AttributeError:
+            self.warning_msg("Not connected to splunkd")
+            return
         except binding.AuthenticationError:
             self.disconnect()
             self.critical_msg('Splunk connection reset')
@@ -1205,43 +1369,21 @@ class MainWindow(QtGui.QMainWindow):
         # Pull config
         filename = self.ui.comboConfig.currentText()
         self.statusbar_msg("Polling configuration values for '%s'..." % filename)
+        data = self.splunkd.get_configuration_kvpairs(filename)
 
-        #  Setting html to true (below) returns colors, however also 'resolves' any existing HTML within the values
-        data = self.splunkd.get_configuration_kvpairs(filename, html=False)
+        # Use Pygments to perform syntax highlighting and translate into HTML, then display results
         html = highlight(data, IniLexer(), HtmlFormatter(full=True, style='colorful'))
         self.ui.editConfig.setHtml(html)
         self.statusbar_msg("Poll for '%s' configuration values complete" % filename)
-
-    def buttonConfigurationMark_clicked(self):
-        """Highlight matching text in configuration"""
-        cursor = self.ui.editConfig.textCursor()
-        format = QtGui.QTextCharFormat()
-        format.setForeground(QtGui.QBrush(QtGui.QColor('red')))
-        pattern = self.ui.editConfigurationFind.text()
-        regex = QtCore.QRegExp(pattern)
-        pos = 0
-        index = regex.indexIn(self.ui.editConfig.toPlainText(), pos)
-        while index != -1:
-            cursor.setPosition(index)
-            cursor.movePosition(QtGui.QTextCursor.NextCharacter, QtGui.QTextCursor.KeepAnchor, len(pattern))
-            cursor.mergeCharFormat(format)
-            pos = index + regex.matchedLength()
-            index = regex.indexIn(self.ui.editConfig.toPlainText(), pos)
-
-    def buttonConfigurationClear_clicked(self):
-        """Clear highlighted text in configuration"""
-        self.ui.editConfig.setTextColor(QtGui.QColor('black'))
-        #self.ui.editConfig.setStyleSheet('color: black;')
-        #cursor = self.ui.editConfig.textCursor()
-        #format = QtGui.QTextCharFormat()
-        #format.setForeground(QtGui.QBrush(QtGui.QColor('black')))
-        #self.ui.editConfig.setCurrentCharFormat(format)
 
     def actionChangeDeploymentServer_clicked(self):
         """Update which Deployment Server the connected Splunk instance is a client of"""
         # Check connection with splunkd
         try:
             self.splunkd.service.settings
+        except AttributeError:
+            self.warning_msg("Not connected to splunkd")
+            return
         except binding.AuthenticationError:
             self.disconnect()
             self.critical_msg('Splunk connection reset')
@@ -1347,7 +1489,7 @@ class MainWindow(QtGui.QMainWindow):
             self.warning_msg("Unable to parse parameters in URI, check formatting")
             return
 
-        # Send REST API query and display results
+        # Send REST API query, then use Pygments to perform syntax highlighting, translate into HTML, and display result
         try:
             result = self.splunkd.rest_call(uri, method, output_format='plaintext', body_input=body_input, **parameters)
             html = highlight(result, XmlLexer(), HtmlFormatter(full=True, style='colorful'))
@@ -1372,19 +1514,21 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
         QtGui.QMainWindow.__init__(self)
         self.ui = Ui_DiscoveryReportWindow()
         self.ui.setupUi(self)
+        self.setFixedSize(self.size())
         self.ui.tableInstances.setColumnWidth(0, 150)  # Address
         self.ui.tableInstances.setColumnWidth(1, 150)  # Status
-
-        # Threading Setup
-        self.threadWorker = DiscoveryReportWorker()
-
-        # Signals and Slots
+        self.ui.labelHelp.linkActivated.connect(self.labelHelp_linkActivated)
         self.ui.buttonCsvBrowse.clicked.connect(self.buttonCsvBrowse_clicked)
         self.ui.buttonReset.clicked.connect(self.buttonReset_clicked)
         self.ui.buttonToggle.clicked.connect(self.buttonToggle_clicked)
-        self.threadWorker.updatestatusbar[str].connect(self.threadWorker_updatestatusbar)
-        self.threadWorker.updatetable[dict].connect(self.threadWorker_updatetable)
-        self.threadWorker.complete[dict].connect(self.threadWorker_complete)
+        self.ui.buttonTopology.clicked.connect(self.buttonTopology_clicked)
+        self.ui.buttonSaveReport.clicked.connect(self.buttonSaveReport_clicked)
+
+        # Threading Setup
+        self.threadWorker = DiscoveryReportWorker()
+        self.threadWorker.signalUpdateProgress[int].connect(self.threadWorker_updateprogress)
+        self.threadWorker.signalUpdateTable[dict].connect(self.threadWorker_updatetable)
+        self.threadWorker.signalPollingComplete[dict].connect(self.threadWorker_complete)
 
         self.cleanup()
 
@@ -1413,18 +1557,26 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
         self.ui.editCsvFilename.setText(None)
         self.ui.tableInstances.setRowCount(0)
         self.ui.buttonCsvBrowse.setEnabled(True)
+        self.ui.buttonTopology.setEnabled(False)
+        self.ui.buttonSaveReport.setEnabled(False)
+        self.ui.buttonReset.setEnabled(True)
         self.ui.buttonToggle.setEnabled(True)
         self.ui.buttonToggle.setText('Start')
+        self.ui.progressBar.setValue(0)
         self.statusbar_msg(None)
         self.filename = None
         self.instances = None
+        self.splunkd_polls = None
         self.threadWorker.quit()
-        self.threadWorker.stopexecution = True
+        self.threadWorker.stop_execution = True
+
+    def labelHelp_linkActivated(self):
+        help_window.show()
 
     def buttonCsvBrowse_clicked(self):
         """Selects the CSV file completed with Splunk instances and loads into memory, checking for syntax errors"""
         try:
-            # Choose and load CSV file
+            # Open file dialog to have user locate the CSV file
             self.filename, _ = QtGui.QFileDialog.getOpenFileName(self, "Select CSV File", os.path.dirname(sys.argv[0]),
                                                                  "Comma-Separated Value Files (*.csv)")
             if not self.filename:
@@ -1434,7 +1586,7 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
                 reader = csv.reader(f)
                 csvfile = list(reader)
 
-            # Build self.instances object with Splunk instances listed in the CSV file
+            # Build self.instances list made up of each Splunk instance in the CSV file
             self.instances = []
             line_number = 0
             for line in csvfile:
@@ -1457,7 +1609,7 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
                     'password': line[3].strip()
                 })
 
-            # Load instances into table
+            # Load instances into the Discovery Report window's table
             table = self.ui.tableInstances
             table.setRowCount(len(self.instances))
             row_number = 0
@@ -1483,130 +1635,394 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
         if self.threadWorker.isRunning():
             # Cancel execution of discovery report
             self.statusbar_msg("Stopping discovery thread...")
-            self.ui.buttonCsvBrowse.setEnabled(False)
             self.ui.buttonToggle.setEnabled(False)
             self.threadWorker.mutex.lock()
-            self.threadWorker.stopexecution = True
+            self.threadWorker.stop_execution = True
             self.threadWorker.mutex.unlock()
         else:
             # Begin execution of discovery report
             if not self.instances:
-                self.critical_msg("CSV file not loaded")
+                self.critical_msg("CSV file has not been selected.")
                 return
             self.statusbar_msg("Executing discovery report...")
+            self.ui.buttonCsvBrowse.setEnabled(False)
+            self.ui.buttonReset.setEnabled(False)
             self.ui.buttonToggle.setText("Stop")
             self.threadWorker.mutex.lock()
-            self.threadWorker.stopexecution = False
+            self.threadWorker.stop_execution = False
             self.threadWorker.mutex.unlock()
-            self.threadWorker.instancedata.emit(self.instances)
+            self.threadWorker.signalInstanceData.emit(self.instances)
             self.threadWorker.start()
 
-    def threadWorker_updatestatusbar(self, msg):
-        """Update the statusbar with a message from the worker thread"""
-        self.statusbar_msg(msg)
+    def buttonTopology_clicked(self):
+        """Build topology from report adjacency data, then display window for adjustment and saving"""
+        try:
+            # Create instances and dictionaries needed for topology building
+            Graph = networkx.Graph()         # Object containing visual topology (nodes, adjacencies, locations, etc)
+            topology = main_window.topology  # Topology configuration
+            pos = {}    # Positions of each node on the topology, representing x=0-100,y=0-100
+            labels = {  # Labels given to each node
+                'webuser': "Web User"
+            }
+            nodes = {   # Splunkd instances categorized by their discovered primary role
+                'user': {'webuser'},
+                'sh': set(),
+                'idx': set(),
+                'hf': set(),
+                'uf': set(),
+                'mc': set(),
+                'shcd': set(),
+                'cm': set(),
+                'ds': set(),
+                'lm': set(),
+                'input': set(),
+                'other': set()
+            }
 
-    def threadWorker_updatetable(self, msg):
-        """Update the table's status column with a message from the worker thread"""
-        self.ui.tableInstances.item(msg['row'], 1).setText(msg['text'])
+            # Build invisible corner nodes to make sure matplotlib.pyplot displays a proportionate topology in 100x100
+            Graph.add_nodes_from({'cornernw', 'cornerne', 'cornersw', 'cornerse'}, color='#ffffff')
+            pos.update({'cornernw': (-10, 110), 'cornerne': (110, 110), 'cornersw': (-10, -10), 'cornerse': (110, -10)})
 
-    def threadWorker_complete(self, splunkd_polls):
-        """Called when the worker thread is done polling Splunk instances"""
-        self.statusbar_msg("Complete")
-        self.information_msg("Discovery Report generation complete. "
-                                               "Choose a destination for the report in the following dialog.")
-        self.ui.buttonCsvBrowse.setEnabled(False)
-        self.ui.buttonToggle.setEnabled(False)
+            # Iterate through splunkd instances and categorize nodes by primary role
+            for instance in self.splunkd_polls:
+                labels[instance] = "%s\n%s" % (instance, self.splunkd_polls[instance].primary_role)
+                if self.splunkd_polls[instance].primary_role[0:11] == "Search Head":
+                    nodes['sh'].add(instance)
+                elif self.splunkd_polls[instance].primary_role[0:7] == "Indexer":
+                    nodes['idx'].add(instance)
+                elif self.splunkd_polls[instance].primary_role == "Heavy Forwarder":
+                    nodes['hf'].add(instance)
+                elif self.splunkd_polls[instance].primary_role == "Universal Forwarder":
+                    nodes['uf'].add(instance)
+                elif self.splunkd_polls[instance].primary_role == "Management Console":
+                    nodes['mc'].add(instance)
+                elif self.splunkd_polls[instance].primary_role == "Deployer (SHC)":
+                    nodes['shcd'].add(instance)
+                elif self.splunkd_polls[instance].primary_role == "Cluster Master":
+                    nodes['cm'].add(instance)
+                elif self.splunkd_polls[instance].primary_role == "Deployment Server":
+                    nodes['ds'].add(instance)
+                elif self.splunkd_polls[instance].primary_role == "License Master":
+                    nodes['lm'].add(instance)
+                elif self.splunkd_polls[instance].primary_role == "Forwarder":
+                    nodes['uf'].add(instance)
+            ent_nodes = set().union(nodes['sh'], nodes['idx'], nodes['hf'], nodes['mc'],
+                                    nodes['shcd'], nodes['cm'], nodes['ds'], nodes['uf'])
 
-        # Get destination filename for report
-        local_datetime_full = time.strftime("%m/%d/%Y %I:%M:%S %p", time.localtime())
-        local_datetime_short = time.strftime("%Y%m%d-%H%M%S", time.localtime())
-        default_filename = "%s Discovery Report" % local_datetime_short
-        filename, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Discovery Report",
-                                                        os.path.join(SCRIPT_DIR, default_filename),
-                                                        "CSV (Comma delimited) (*.csv);;All Files (*.*)")
-        if not filename:
-            return
+            # Add nodes to graph
+            if topology['nodedraw_user']:
+                Graph.add_nodes_from(nodes['user'], color='#' + topology['nodecolor_user'])
+            if topology['nodedraw_searchhead']:
+                Graph.add_nodes_from(nodes['sh'], color='#' + topology['nodecolor_searchhead'])
+            if topology['nodedraw_indexer']:
+                Graph.add_nodes_from(nodes['idx'], color='#' + topology['nodecolor_indexer'])
+            if topology['nodedraw_heavyforwarder']:
+                Graph.add_nodes_from(nodes['hf'], color='#' + topology['nodecolor_heavyforwarder'])
+            if topology['nodedraw_universalforwarder']:
+                Graph.add_nodes_from(nodes['uf'], color='#' + topology['nodecolor_universalforwarder'])
+            if topology['nodedraw_mgmtconsole']:
+                Graph.add_nodes_from(nodes['mc'], color='#' + topology['nodecolor_mgmtconsole'])
+            if topology['nodedraw_shcdeployer']:
+                Graph.add_nodes_from(nodes['shcd'], color='#' + topology['nodecolor_shcdeployer'])
+            if topology['nodedraw_clustermaster']:
+                Graph.add_nodes_from(nodes['cm'], color='#' + topology['nodecolor_clustermaster'])
+            if topology['nodedraw_deploymentserver']:
+                Graph.add_nodes_from(nodes['ds'], color='#' + topology['nodecolor_deploymentserver'])
+            if topology['nodedraw_licensemaster']:
+                Graph.add_nodes_from(nodes['lm'], color='#' + topology['nodecolor_licensemaster'])
+            if topology['nodedraw_inputs']:
+                Graph.add_nodes_from(nodes['input'], color='#' + topology['nodecolor_inputs'])
 
+            # Function used to add adjacencies and discover new Splunk instances
+            def add_adjacency(discovered_node, dn_role, dn_color, adj_node, adj_color):
+                if discovered_node[0] == '(' and discovered_node[-1:] == ')':
+                    return
+                if discovered_node not in Graph.nodes:
+                    nodes[dn_role].add(discovered_node)
+                    labels[discovered_node] = "%s\nDiscovered Node" % discovered_node
+                    Graph.add_node(discovered_node, color='#' + topology[dn_color])
+                Graph.add_edge(discovered_node, adj_node, color='#' + topology[adj_color])
+
+            # Map adjacencies between nodes
+            #  Web Access to Search Heads
+            if topology['adjdraw_web']:
+                for sh in nodes['sh']:
+                    if sh not in self.splunkd_polls:
+                        continue
+                    if self.splunkd_polls[sh].http_server:
+                        if {nodes['user'], sh}.issubset(Graph.nodes):  # check both sides of adjacency exist as nodes
+                            Graph.add_edge(nodes['user'], sh, color='#' + topology['adjcolor_web'])
+            #  Distributed Search from Search Heads
+            if topology['adjdraw_distsearch']:
+                for sh in nodes['sh']:
+                    if sh not in self.splunkd_polls:
+                        continue
+                    for peer in self.splunkd_polls[sh].distributedsearch_peers:
+                        add_adjacency(peer['peerName'], 'idx', 'nodecolor_indexer', sh, 'adjcolor_distsearch')
+            #  Data Forwarding from Heavy Forwarder
+            if topology['adjdraw_datafwdheavyforwarder']:
+                for hf in nodes['hf']:
+                    if hf not in self.splunkd_polls:
+                        continue
+                    for server in self.splunkd_polls[hf].forward_servers:
+                        add_adjacency(server['title'], 'idx', 'nodecolor_indexer', hf, 'adjcolor_datafwd')
+            #  Data Forwarding from Universal Forwarder
+            if topology['adjdraw_datafwduniversalforwarder']:
+                for uf in nodes['uf']:
+                    if uf not in self.splunkd_polls:
+                        continue
+                    for server in self.splunkd_polls[uf].forward_servers:
+                        add_adjacency(server['title'], 'idx', 'nodecolor_indexer', uf, 'adjcolor_datafwd')
+            #  Data Forwarding from Inputs
+            if topology['adjdraw_datafwdinput']:
+                for ipt in nodes['input']:
+                    if ipt not in self.splunkd_polls:
+                        continue
+                    for server in self.splunkd_polls[ipt].forward_servers:
+                        add_adjacency(server['title'], 'idx', 'nodecolor_indexer', ipt, 'adjcolor_datafwd')
+            #  Cluster Management
+            if topology['adjdraw_clustermgmt']:
+                for cm in nodes['cm']:
+                    if cm not in self.splunkd_polls:
+                        continue
+                    for peer in self.splunkd_polls[cm].cluster_peers:
+                        add_adjacency(peer['location'], 'idx', 'nodecolor_indexer', cm, 'adjcolor_clustermgmt')
+            #  Bucket Replication
+            if topology['adjdraw_bucketrep']:
+                for idx in nodes['idx']:
+                    if idx not in self.splunkd_polls:
+                        continue
+                    for peer in self.splunkd_polls[idx].cluster_peers:
+                        add_adjacency(peer['location'], 'idx', 'nodecolor_indexer', idx, 'adjcolor_bucketrep')
+            #  SHC Deployer
+            if topology['adjdraw_shcdeployment']:
+                for sh in nodes['sh']:
+                    if sh not in self.splunkd_polls:
+                        continue
+                    deployer = self.splunkd_polls[sh].shcluster_deployer
+                    add_adjacency(deployer, 'shcd', 'nodecolor_shcdeployer', sh, 'adjcolor_shcdeployment')
+            #  Since potentially discovered nodes below don't have a clear Splunk role, discover them last
+            #  Distributed Search from Management Console
+            if topology['adjdraw_mgmtconsole']:
+                for mc in nodes['mc']:
+                    for peer in self.splunkd_polls[mc].distributedsearch_peers:
+                        add_adjacency(peer['peerName'], 'other', 'nodecolor_others', mc, 'adjcolor_mgmtconsole')
+            #  Deployment Server
+            if topology['adjdraw_deployment']:
+                for ds in nodes['ds']:
+                    for client in self.splunkd_polls[ds].deployment_clients:
+                        dns_mgmt_pair = '%s:%s' % (client['dns'], client['mgmt'])
+                        add_adjacency(dns_mgmt_pair, 'other', 'nodecolor_others', ds, 'adjcolor_deployment')
+            #  License
+            if topology['adjdraw_license']:
+                for slave in ent_nodes:
+                    license_master = self.splunkd_polls[slave].license_master
+                    add_adjacency(license_master, 'other', 'nodecolor_others', slave, 'adjcolor_license')
+
+            # Return error if not enough nodes to paint
+            if len(Graph.nodes) <= 1:
+                self.warning_msg("Not enough nodes found to build topology.")
+                return
+
+            # Function used to compute positions where nodes are placed on each layer
+            def layer_positions(layernodes, layerheight=0, bufferwidth=10, xalignment='justify'):
+                if not layernodes:
+                    return {}
+                positions = {}
+                # If statically separated nodes are too wide, justify instead
+                if (topology['static_width'] * len(layernodes)) > 100 - (bufferwidth * 2):
+                    xalignment = 'justify'
+                if xalignment == 'left':  # left-aligned and statically separated
+                    xpos = bufferwidth
+                    for node in layernodes:
+                        positions[node] = (xpos, layerheight)
+                        xpos += topology['static_width']
+                if xalignment == 'right':  # right-aligned and statically separated
+                    xpos = 100 - bufferwidth
+                    for node in layernodes:
+                        positions[node] = (xpos, layerheight)
+                        xpos -= topology['static_width']
+                if xalignment in ('center', 'justify'):  # center-aligned and evenly justified
+                    nodewidth = (100 - (bufferwidth * 2)) / len(layernodes)
+                    xpos = bufferwidth + (nodewidth / 2)
+                    for node in layernodes:
+                        positions[node] = (xpos, layerheight)
+                        xpos += nodewidth
+                return positions
+
+            # Determine x-coordinate positions of nodes, along with y-coordinate layer height
+            pos.update(layer_positions(sorted(nodes['user']), layerheight=topology['layerheight_user'],
+                                       xalignment=topology['layeralignment_user']))
+            pos.update(layer_positions(sorted(nodes['mc']), layerheight=topology['layerheight_mc'],
+                                       xalignment=topology['layeralignment_mc']))
+            pos.update(layer_positions(sorted(nodes['shcd']), layerheight=topology['layerheight_shcd'],
+                                       xalignment=topology['layeralignment_shcd']))
+            pos.update(layer_positions(sorted(nodes['sh']), layerheight=topology['layerheight_sh'],
+                                       xalignment=topology['layeralignment_sh']))
+            pos.update(layer_positions(sorted(nodes['cm']), layerheight=topology['layerheight_cm'],
+                                       xalignment=topology['layeralignment_cm']))
+            pos.update(layer_positions(sorted(nodes['idx']), layerheight=topology['layerheight_idx'],
+                                       xalignment=topology['layeralignment_idx']))
+            pos.update(layer_positions(sorted(nodes['lm']), layerheight=topology['layerheight_lm'],
+                                       xalignment=topology['layeralignment_lm']))
+            pos.update(layer_positions(sorted(nodes['hf']), layerheight=topology['layerheight_hf'],
+                                       xalignment=topology['layeralignment_hf']))
+            pos.update(layer_positions(sorted(nodes['ds']), layerheight=topology['layerheight_ds'],
+                                       xalignment=topology['layeralignment_ds']))
+            pos.update(layer_positions(sorted(nodes['uf']), layerheight=topology['layerheight_uf'],
+                                       xalignment=topology['layeralignment_uf']))
+            pos.update(layer_positions(sorted(nodes['input']), layerheight=topology['layerheight_input'],
+                                       xalignment=topology['layeralignment_input']))
+            pos.update(layer_positions(sorted(nodes['other']), layerheight=topology['layerheight_other'],
+                                       xalignment=topology['layeralignment_other']))
+
+            # Draw topology
+            node_colors = [Graph.nodes[n]['color'] for n in Graph.nodes()]
+            edge_colors = [Graph[a][b]['color'] for a, b in Graph.edges()]
+            networkx.draw(Graph, pos=pos, labels=labels, with_labels=True, font_size=topology['fontsize'],
+                          alpha=0.8, node_color=node_colors, edge_color=edge_colors)
+
+            # Open new window displaying topology, with option to save
+            matplotlib.pyplot.get_current_fig_manager().canvas.set_window_title('Topology')
+            matplotlib.pyplot.show()
+        except:
+            exc = traceback.format_exception(traceback.format_exception(*sys.exc_info()))
+            msg = "Exception while building topology:\n\n%s" % ''.join(exc)
+            self.warning_msg(msg)
+
+    def buttonSaveReport_clicked(self):
+        """Save the discovered data as a CSV file"""
         # Build report
         try:
             # Build report text
+            local_datetime_full = time.strftime("%m/%d/%Y %I:%M:%S %p", time.localtime())
+            local_datetime_short = time.strftime("%Y%m%d-%H%M%S", time.localtime())
             report = ""
             report += "# Misner Splunk Tool v%s by Joe Misner - http://tools.misner.net/\n" % __version__
             report += "# Discovery Report produced %s\n" % local_datetime_full
 
             # Get "category / name" columns from a successful splunkd's report to build the header, then break
             header = []
-            for instance in splunkd_polls:
-                if splunkd_polls[instance].report:
-                    for entry in splunkd_polls[instance].report:
+            for instance in self.splunkd_polls:
+                if self.splunkd_polls[instance].report:
+                    for entry in self.splunkd_polls[instance].report:
                         header.append('%s: %s' % (entry['category'], entry['name']))
                     report += "%s\n" % ','.join(header)
                     break
 
+            # Return error if not enough nodes to paint
+            if not header:
+                self.warning_msg("No successful splunkd polls retrieved to generate a report.")
+                return
+
             # Pull values from each instance into a comma-separated string
-            for instance in splunkd_polls:
+            for instance in self.splunkd_polls:
                 entries = []
-                for entry in splunkd_polls[instance].report:
+                for entry in self.splunkd_polls[instance].report:
                     entries.append(str(entry['value']).replace(',', ';'))
                 report += "%s\n" % ','.join(entries)
+
+            # Get destination filename from user for the completed report
+            default_filename = "%s Discovery Report" % local_datetime_short
+            filename, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Discovery Report",
+                                                            os.path.join(SCRIPT_DIR, default_filename),
+                                                            "CSV (Comma delimited) (*.csv);;All Files (*.*)")
+
+            # If user cancels the Save Discovery Report dialog, report data is discarded
+            if not filename:
+                return
 
             # Save file
             with open(filename, 'w') as f:
                 f.write(report)
                 self.information_msg("Report saved to location:\n%s" % filename.replace('/', '\\'))
         except:
-            self.warning_msg("Exception while building report.")
+            exc = traceback.format_exception(traceback.format_exception(*sys.exc_info()))
+            msg = "Exception while building report:\n\n%s" % ''.join(exc)
+            self.warning_msg(msg)
+
+    def threadWorker_updateprogress(self, progress):
+        """Update the statusbar with a message from the worker thread"""
+        if progress == 0:
+            self.statusbar_msg("Cancelled")
+            self.ui.buttonReset.setEnabled(True)
+        else:
+            instance_count = len(self.instances)
+            percent = int((float(progress) - 1) / instance_count * 100) if instance_count > 0 else 0
+            self.ui.progressBar.setValue(percent)
+            self.statusbar_msg("Running discovery report (instance %s of %s)..." % (progress, instance_count))
+
+
+    def threadWorker_updatetable(self, msg):
+        """Update the table's status column with a message from the worker thread"""
+        try:
+            self.ui.tableInstances.item(msg['row'], 1).setText(msg['text'])
+        except AttributeError:  # table was likely reset
+            pass
+
+    def threadWorker_complete(self, splunkd_polls):
+        """Called when the worker thread is done polling Splunk instances"""
+        # splunkd_polls is a list of dictionaries, one for each polled Splunk instance
+        # Save to instance attribute for use later when creating a Topology
+        self.splunkd_polls = splunkd_polls
+
+        # Notify user that polling is complete
+        self.ui.buttonReset.setEnabled(True)
+        self.ui.buttonToggle.setEnabled(False)
+        self.ui.buttonTopology.setEnabled(True)
+        self.ui.buttonSaveReport.setEnabled(True)
+        self.ui.progressBar.setValue(100)
+        self.statusbar_msg("Complete")
+        self.information_msg("Discovery Report generation complete.")
 
 
 class DiscoveryReportWorker(QtCore.QThread):
     """Executes the Discovery Report on it's own worker thread"""
-    instancedata = QtCore.Signal(list)
-    #stopexecution = QtCore.Signal(bool)
-    updatestatusbar = QtCore.Signal(str)
-    updatetable = QtCore.Signal(dict)
-    complete = QtCore.Signal(dict)
+    # Class attribute used for cross-thread communications
+    signalInstanceData = QtCore.Signal(list)
+    signalUpdateProgress = QtCore.Signal(int)
+    signalUpdateTable = QtCore.Signal(dict)
+    signalPollingComplete = QtCore.Signal(dict)
     mutex = QtCore.QMutex()
 
     def __init__(self):
+        """Constructor"""
         QtCore.QThread.__init__(self)
-        self.instancedata[list].connect(self.writeinstancedata)
-        self.stopexecution = True
+        self.signalInstanceData[list].connect(self.signalInstanceData_write)
+        self.stop_execution = True
+        self.instances = []
 
-    def __del__(self):
-        self.wait()
-
-    def writeinstancedata(self, instances):
+    def signalInstanceData_write(self, instances):
+        """Capture list of Splunk instances to iterate through from the main thread"""
         self.instances = instances
 
     def run(self):
+        """Worker thread started"""
         self.poll()
 
     def poll(self):
         """Execute the discovery report, polling all Splunk instances"""
         # Iterate through instances
         splunkd_polls = {}
-        instance_number = 0
         for instance in self.instances:
-            if self.stopexecution:
-                self.updatestatusbar.emit('Cancelled')
+            if self.stop_execution:
+                self.signalUpdateProgress.emit(0)
                 return
 
-            instance_number += 1
-            self.updatestatusbar.emit("Running discovery report (instance %s of %s)..." \
-                                      % (instance_number, len(discoveryreport_window.instances)))
-
+            # Setup before polling
+            instance_number = self.instances.index(instance) + 1
+            self.signalUpdateProgress.emit(instance_number)
             splunk_host = instance['address']
             splunk_port = instance['port']
             splunk_user = instance['username']
             splunk_pass = instance['password']
 
-            host = "%s:%s" % (splunk_host, splunk_port)
-            row_number = instance_number - 1
-
             def instance_status(msg):
-                self.updatetable.emit({'row': row_number, 'text': msg})
+                """Update Discovery Report window's table with Splunk instance's polling status"""
+                row_number = instance_number - 1
+                self.signalUpdateTable.emit({'row': row_number, 'text': msg})
 
-            # Create Splunk instance
+            # Connect to Splunk instance
             instance_status("Connecting...")
             try:
                 splunkd = Splunkd(splunk_host, splunk_port, splunk_user, splunk_pass)
@@ -1667,10 +2083,12 @@ class DiscoveryReportWorker(QtCore.QThread):
                 continue
 
             # Success
-            splunkd_polls[host] = splunkd
+            host_port_pair = "%s:%s" % (splunk_host, splunk_port)
+            splunkd_polls[host_port_pair] = splunkd
             instance_status("Complete")
 
-        self.complete.emit(splunkd_polls)
+        # Notify main thread that polling is complete, sending over the data from all instances
+        self.signalPollingComplete.emit(splunkd_polls)
         self.quit()
 
 
@@ -1683,13 +2101,12 @@ class HelpWindow(QtWebKit.QWebView):
         self.setWindowTitle("Help - README.md")
         self.setWindowIcon(main_window.windowIcon())
         self.setWindowModality(QtCore.Qt.ApplicationModal)
+        self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
         settings = QtWebKit.QWebSettings.globalSettings()
         settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, 'Verdana')
         settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 12)
-        self.get_markdown()
 
-    def get_markdown(self):
-        """Retrieves markdown text from the README.md file in the script directory"""
+        # Retrieve markdown text from the README.md file in the script directory
         try:
             with open(os.path.join(SCRIPT_DIR, 'README.md'), 'r') as f:
                 readme_file = f.read()

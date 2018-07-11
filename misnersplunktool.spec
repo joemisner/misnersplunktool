@@ -12,12 +12,12 @@ a = Analysis(
   hookspath=None,
   datas=added_files1,
   excludes=[
-    'FixTk',
-	'tcl',
-	'tk',
-	'_tkinter',
-	'tkinter',
-	'Tkinter',
+    #'FixTk',
+	#'tcl',
+	#'tk',
+	#'_tkinter',
+	#'tkinter',
+	#'Tkinter',
 	'certifi'
   ]
 )
@@ -31,12 +31,12 @@ a.binaries = a.binaries - TOC([
  ('mfcm90.dll', None, None),
  ('mfcm90u.dll', None, None),
  ('msvcr90.dll', None, None),
- ('msvcm90.dll', None, None),
- ('tcl85.dll', None, None),
- ('tk85.dll', None, None),
- ('Tkinter', None, None),
- ('tk', None, None),
- ('_tkinter', None, None)
+ ('msvcm90.dll', None, None)
+ #('tcl85.dll', None, None),
+ #('tk85.dll', None, None),
+ #('Tkinter', None, None),
+ #('tk', None, None),
+ #('_tkinter', None, None)
 ])
 
 pyz = PYZ(
@@ -61,6 +61,6 @@ coll = COLLECT(
   a.zipfiles,
   a.datas,
   strip=False,
-  upx=True,
+  upx=False,
   name='Misner Splunk Tool'
 )

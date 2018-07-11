@@ -478,6 +478,9 @@ required:</string>
         <height>351</height>
        </rect>
       </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::NoContextMenu</enum>
+      </property>
      </widget>
      <widget class="QLabel" name="label_41">
       <property name="geometry">
@@ -499,94 +502,6 @@ required:</string>
       </property>
       <property name="alignment">
        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-     <widget class="QLabel" name="labelHighlighter">
-      <property name="geometry">
-       <rect>
-        <x>270</x>
-        <y>10</y>
-        <width>81</width>
-        <height>20</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="text">
-       <string>Highlighter:</string>
-      </property>
-      <property name="alignment">
-       <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-      </property>
-     </widget>
-     <widget class="QLineEdit" name="editConfigurationFind">
-      <property name="geometry">
-       <rect>
-        <x>380</x>
-        <y>10</y>
-        <width>211</width>
-        <height>20</height>
-       </rect>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="buttonConfigurationMark">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>600</x>
-        <y>10</y>
-        <width>51</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="toolTip">
-       <string>Poll the Splunk instance for current values.</string>
-      </property>
-      <property name="text">
-       <string>Mark</string>
-      </property>
-      <property name="checkable">
-       <bool>false</bool>
-      </property>
-     </widget>
-     <widget class="QPushButton" name="buttonConfigurationClear">
-      <property name="enabled">
-       <bool>true</bool>
-      </property>
-      <property name="geometry">
-       <rect>
-        <x>660</x>
-        <y>10</y>
-        <width>51</width>
-        <height>22</height>
-       </rect>
-      </property>
-      <property name="font">
-       <font>
-        <weight>50</weight>
-        <bold>false</bold>
-       </font>
-      </property>
-      <property name="toolTip">
-       <string>Poll the Splunk instance for current values.</string>
-      </property>
-      <property name="text">
-       <string>Clear</string>
-      </property>
-      <property name="checkable">
-       <bool>false</bool>
       </property>
      </widget>
     </widget>
@@ -2157,6 +2072,9 @@ required:</string>
         <family>Courier New</family>
        </font>
       </property>
+      <property name="contextMenuPolicy">
+       <enum>Qt::NoContextMenu</enum>
+      </property>
      </widget>
      <widget class="QLineEdit" name="editRestBodyInput">
       <property name="geometry">
@@ -2767,7 +2685,7 @@ required:</string>
   </action>
   <action name="actionSaveReport">
    <property name="text">
-    <string>Save Report</string>
+    <string>Save Instance Report</string>
    </property>
   </action>
   <action name="actionDiscoveryReport">
@@ -2794,9 +2712,6 @@ required:</string>
   <tabstop>buttonRefreshConfigurations</tabstop>
   <tabstop>tableMessages</tabstop>
   <tabstop>comboConfig</tabstop>
-  <tabstop>editConfigurationFind</tabstop>
-  <tabstop>buttonConfigurationMark</tabstop>
-  <tabstop>buttonConfigurationClear</tabstop>
   <tabstop>editConfig</tabstop>
   <tabstop>tabWidgetInputStatus</tabstop>
   <tabstop>tableFileStatus</tabstop>

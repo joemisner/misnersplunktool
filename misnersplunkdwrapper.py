@@ -32,6 +32,7 @@ Changelog:
              current instance;
              merged Deployment category in Report tab into the Adjacencies category
 2017.10.15 - fixed report code related to adjacencies causing a crash
+2017.10.17 - added primary_role attribute, which is a guess based on given server_roles data
 """
 
 import re
@@ -43,7 +44,7 @@ import splunklib.client as client
 import splunklib.data as data
 import splunklib.results as results
 
-__version__ = '2017.10.15'
+__version__ = '2017.10.17'
 
 SPLUNK_HOST = 'localhost'
 SPLUNK_PORT = 8089
@@ -84,6 +85,7 @@ class Splunkd:
         self.roles = ['(unknown)']
         self.product = '(unknown)'
         self.mode = '(unknown)'
+        self.actual_role = '(unknown)'
         self.type = '(unknown)'
         self.os = '(unknown)'
 
@@ -286,6 +288,39 @@ class Splunkd:
         self.roles = self._service_info['server_roles'] if 'server_roles' in self._service_info else ['(unknown)']
         self.product = self._service_info['product_type'] if 'product_type' in self._service_info else '(unknown)'
         self.mode = self._service_info['mode'] if 'mode' in self._service_info else '(unknown)'
+
+        # Guess this Splunk instance's primary role in it's deployment, based on listed values for server_roles.
+        # The order below seems to be an accurate set of rules for making this guess, based on how Splunk assigns roles.
+        if 'universal_forwarder' in self.roles:  # also see: lightweight_forwarder
+            self.primary_role = "Universal Forwarder"
+        elif 'management_console' in self.roles:
+            self.primary_role = "Management Console"
+        elif 'cluster_slave' in self.roles:
+            self.primary_role = "Indexer (Cluster Slave)"
+        elif 'indexer' in self.roles:  # also see: search_peer
+            self.primary_role = "Indexer (Standalone)"
+        elif 'shc_deployer' in self.roles:
+            self.primary_role = "Deployer (SHC)"
+        elif 'shc_captain' in self.roles:
+            self.primary_role = "Search Head (SHC Captain)"
+        elif 'shc_member' in self.roles:
+            self.primary_role = "Search Head (SHC Member)"
+        elif 'cluster_master' in self.roles:
+            self.primary_role = "Cluster Master"
+        elif 'deployment_server' in self.roles:
+            self.primary_role = "Deployment Server"
+        elif 'heavyweight_forwarder' in self.roles:
+            self.primary_role = "Heavy Forwarder"
+        elif 'license_master' in self.roles:
+            self.primary_role = "License Master"
+        elif 'search_head' in self.roles:  # also see: cluster_search_head
+            self.primary_role = "Search Head (Standalone)"
+        elif self.mode == 'dedicated forwarder':  # older versions of Splunk don't set a role
+            self.primary_role = "Forwarder"
+        else:
+            self.primary_role = "Heavy Forwarder"
+
+        # Derive the type of Splunk install based on role and product values
         if 'universal_forwarder' in self.roles:
             self.type = 'Splunk Universal Forwarder v%s' % self.version
         elif self.product == 'enterprise':
@@ -300,6 +335,8 @@ class Splunkd:
             self.type = 'Splunk Forwarder v%s' % self.version
         else:
             self.type = 'Splunk v%s' % self.version
+
+        # Derive the host OS of the Splunk install based on available values
         try:
             self.os = '%s %s' % (self._service_info['os_name_extended'],
                                  self._service_info['cpu_arch'])
@@ -1007,17 +1044,14 @@ class Splunkd:
 
     # Pull configuration values
 
-    def get_configuration_kvpairs(self, filename, html=False):
+    def get_configuration_kvpairs(self, filename):
         """GET /services/properties/*"""
         conf = self.rest_call('/services/properties/%s' % filename, count=-1)['feed']['entry']
         if type(conf) is not list: conf = [conf]
         data = ''
         for stanzadict in conf:
             stanza = stanzadict['title']
-            if html:
-                data += '<font color=\"Orange\">[%s]</font><br>' % stanza
-            else:
-                data += '[%s]\n' % stanza
+            data += '[%s]\n' % stanza
             kvpairs = []
             try:
                 keydicts = self.rest_call(stanzadict['link']['href'], count=-1)['feed']['entry']
@@ -1032,14 +1066,11 @@ class Splunkd:
                     value = ''
                 if key[0:4] == 'eai:':
                     continue
-                if html:
-                    kvpairs.append('%s = <font color=\"Green\">%s</font><br>' % (key, value))
-                else:
-                    kvpairs.append('%s = %s\n' % (key, value))
+                kvpairs.append('%s = %s\n' % (key, value))
             kvpairs.sort()
             for kvpair in kvpairs:
                 data += kvpair
-            data += '<br>' if html else '\n'
+            data += '\n'
         return data
 
     # Control process
@@ -1090,6 +1121,8 @@ class Splunkd:
 
         # Convenience function to add individual entries to the report
         def report_append(category, name, health, value):
+            if health == 'N/A':
+                health = ''
             if value == '(none)':
                 value = ''
             self.report.append({
@@ -1102,11 +1135,13 @@ class Splunkd:
         # Report entries, by category
 
         #  Server
-        report_append('Server', 'Host/IP', 'N/A', self.mgmt_host)
+        host_port_pair = '%s:%s' % (self.mgmt_host, str(self.mgmt_port))
+        report_append('Server', 'Address', 'N/A', host_port_pair)
         report_append('Server', 'Server Name', 'N/A', self.server_name)
         report_append('Server', 'GUID', 'N/A', self.guid)
         report_append('Server', 'Type', 'N/A', self.type)
         report_append('Server', 'Roles', 'N/A', ', '.join(map(str, self.roles)))
+        report_append('Server', 'Primary Role Guess', 'N/A', self.primary_role)
         report_append('Server', 'OS', 'N/A', self.os)
         report_append('Server', 'Web Enabled', 'N/A', str(self.http_server))
 
@@ -1119,7 +1154,7 @@ class Splunkd:
                     health = 'Caution'
                 else:
                     health = 'OK'
-                    value = self.version
+                value = self.version
             else:
                 health = 'Unknown'
                 value = '?'
