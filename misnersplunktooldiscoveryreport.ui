@@ -17,7 +17,7 @@
    <string>Discovery Report</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="Z:/Python/MisnerSplunkTool/icons.qrc">
+   <iconset resource="icons.qrc">
     <normaloff>:/favorites.png</normaloff>:/favorites.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
@@ -258,7 +258,7 @@
   <tabstop>buttonSaveReport</tabstop>
  </tabstops>
  <resources>
-  <include location="Z:/Python/MisnerSplunkTool/icons.qrc"/>
+  <include location="icons.qrc"/>
  </resources>
  <connections/>
 </ui>

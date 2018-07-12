@@ -18,7 +18,7 @@ a = Analysis(
 	#'_tkinter',
 	#'tkinter',
 	#'Tkinter',
-	'certifi'
+	#'certifi'
   ]
 )
 
@@ -50,7 +50,7 @@ exe = EXE(
   name='misnersplunktool',
   debug=False,
   strip=False,
-  upx=True,
+  upx=False,
   console=False,
   icon='favorites.ico'
 )

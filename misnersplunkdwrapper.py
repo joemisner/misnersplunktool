@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 misnersplunkdwrapper.py - Misner Splunkd Wrapper
-Copyright (C) 2015-2017 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2018 Joe Misner <joe@misner.net>
 http://tools.misner.net/
 
 This program is free software; you can redistribute it and/or modify
@@ -19,9 +19,9 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 Dependencies:
-- Python v2.7.13, https://www.python.org/
-- Python package 'requests' v2.9.1, https://pypi.python.org/pypi/requests
-- Python module 'splunk-sdk' v1.6.0, https://pypi.python.org/pypi/splunk-sdk
+- Python v2.7.15 64-bit, https://www.python.org/
+- Python package 'requests' v2.19.1, https://pypi.python.org/pypi/requests
+- Python module 'splunk-sdk' v1.6.5, https://pypi.python.org/pypi/splunk-sdk
 
 Changelog:
 2017.02.25 - initial version, forked from misnersplunktool.py
@@ -33,6 +33,7 @@ Changelog:
              merged Deployment category in Report tab into the Adjacencies category
 2017.10.15 - fixed report code related to adjacencies causing a crash
 2017.10.17 - added primary_role attribute, which is a guess based on given server_roles data
+2018.07.11 - updated dependencies
 """
 
 import re
@@ -44,7 +45,7 @@ import splunklib.client as client
 import splunklib.data as data
 import splunklib.results as results
 
-__version__ = '2017.10.17'
+__version__ = '2018.07.11'
 
 SPLUNK_HOST = 'localhost'
 SPLUNK_PORT = 8089

@@ -1,9 +1,9 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2017.10.25
+Misner Splunk Tool v2018.07.11  
 by Joe Misner  
-http://tools.misner.net/  
+http://tools.misner.net/
 
 Misner Splunk Tool connects to a Splunk Enterprise or Universal
 Forwarder instance via REST API, retrieving the instance's
@@ -213,16 +213,16 @@ Building
 The following dependencies are required to build the application:
 
 - Misner Splunk Tool source
-- Python v2.7.13, https://www.python.org/
+- Python 64-bit v2.7.15, https://www.python.org/
 - Inno Setup v5.5.9, http://www.jrsoftware.org/
-- Python module 'PyInstaller' v3.2.1, https://pypi.python.org/pypi/PyInstaller
-- Python module 'PySide' v1.2.4, https://pypi.python.org/pypi/PySide
-- Python package 'requests' v2.9.1, https://pypi.python.org/pypi/requests
-- Python module 'splunk-sdk' v1.6.0, https://pypi.python.org/pypi/splunk-sdk
-- Python module 'Markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
+- Python module 'PyInstaller' v3.4.dev0, https://pypi.python.org/pypi/PyInstaller
+- Python module 'PySide2' v5.11, https://pypi.python.org/pypi/PySide2
+- Python package 'requests' v2.19.1, https://pypi.python.org/pypi/requests
+- Python module 'splunk-sdk' v1.6.5, https://pypi.python.org/pypi/splunk-sdk
+- Python module 'Markdown' v2.6.11, https://pypi.python.org/pypi/Markdown
 - Python module 'Pygments' v2.2.0, https://pypi.python.org/pypi/Pygments
-- Python module 'networkx' v2.0, https://pypi.python.org/pypi/networkx
-- Python module 'matplotlib' v2.1.0, https://pypi.python.org/pypi/matplotlib
+- Python module 'networkx' v2.1, https://pypi.python.org/pypi/networkx
+- Python module 'matplotlib' v2.2.2, https://pypi.python.org/pypi/matplotlib
 
 Steps:
 
@@ -233,7 +233,7 @@ Steps:
 
 2. Convert the PySide graphical user interface file `misnersplunktool.ui` into Python:
     ```
-    c:\Python27\Scripts\pyside-uic.exe -x misnersplunktool.ui -o misnersplunktoolui.py
+    c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktool.ui -o misnersplunktoolui.py
     ```
     * Assumption is that Python 2.7 is installed in `c:\Python27\`
 
@@ -355,12 +355,18 @@ Changelog
  * disabled QWebView right-click menu which incorrectly displayed a "Reload" action
  * misc code cleanup
 
+2018.07.11
+
+ * ported from PySide to PySide2 (Qt4 to Qt5)
+ * updated dependencies, including switch to 64-bit Python interpreter and PyInstaller v3.4.dev0 for better Qt5 hooks support
+ * removed QtWebKit dependency in Qt, which was switched to the much larger QtWebEngine that was not necessary for this app
+
 
 
 License
 -------
 
-Copyright (C) 2015-2017 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2018 Joe Misner <joe@misner.net>
 
 See LICENSE.txt in this application's installation directory for
 complete license information.

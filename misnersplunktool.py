@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 misnersplunktool.py - Misner Splunk Tool
-Copyright (C) 2015-2017 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2018 Joe Misner <joe@misner.net>
 http://tools.misner.net/
 
 This program is free software; you can redistribute it and/or modify
@@ -19,13 +19,13 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 Dependencies:
-- Python v2.7.13, https://www.python.org/
-- Python module 'splunk-sdk' v1.6.0, https://pypi.python.org/pypi/splunk-sdk
-- Python module 'PySide' v1.2.4, https://pypi.python.org/pypi/PySide
-- Python module 'Markdown' v2.6.9, https://pypi.python.org/pypi/Markdown
+- Python 64-bit v2.7.15, https://www.python.org/
+- Python module 'splunk-sdk' v1.6.5, https://pypi.python.org/pypi/splunk-sdk
+- Python module 'PySide2' v5.11, https://pypi.python.org/pypi/PySide2
+- Python module 'Markdown' v2.6.11, https://pypi.python.org/pypi/Markdown
 - Python module 'Pygments' v2.2.0, https://pypi.python.org/pypi/Pygments
-- Python module 'networkx' v2.0, https://pypi.python.org/pypi/networkx
-- Python module 'matplotlib' v2.1.0, https://pypi.python.org/pypi/matplotlib
+- Python module 'networkx' v2.1, https://pypi.python.org/pypi/networkx
+- Python module 'matplotlib' v2.2.2, https://pypi.python.org/pypi/matplotlib
 - Python module 'misnersplunktoolui.py'
 - Python module 'misnersplunktooldiscoveryreportui.py'
 - Python module 'misnersplunkdwrapper.py'
@@ -48,12 +48,12 @@ from pygments import highlight
 from pygments.lexers import XmlLexer, IniLexer
 from pygments.formatters import HtmlFormatter
 import splunklib.binding as binding
-from PySide import QtCore, QtGui, QtWebKit
+from PySide2 import QtCore, QtWidgets
 from misnersplunktoolui import Ui_MainWindow
 from misnersplunktooldiscoveryreportui import Ui_DiscoveryReportWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2017.10.25'
+__version__ = '2018.07.11'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -197,7 +197,7 @@ ABOUT_TEXT = """
 <h3>Misner Splunk Tool</h3>
 Version %s
 <p>
-Copyright (C) 2015-2017 Joe Misner &lt;<a href="mailto:joe@misner.net">joe@misner.net</a>&gt;
+Copyright (C) 2015-2018 Joe Misner &lt;<a href="mailto:joe@misner.net">joe@misner.net</a>&gt;
 <a href="http://tools.misner.net/">http://tools.misner.net/</a>
 <p>
 Splunk is a trademark of Splunk Inc. in the United States and other
@@ -382,13 +382,13 @@ def pretty_time_delta(seconds):
     return output.strip()
 
 
-class MainWindow(QtGui.QMainWindow):
+class MainWindow(QtWidgets.QMainWindow):
     """Object class for the main window"""
     def __init__(self):
         """Executed when the MainWindow() object is created"""
         # GUI Setup
         #  Basics
-        QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.show()
@@ -640,24 +640,24 @@ class MainWindow(QtGui.QMainWindow):
         self.ui.statusbar.showMessage(msg)
 
     def question_msg_yesno(self, msg):
-        dialog_answer = QtGui.QMessageBox.question(self, "Misner Splunk Tool", msg,
-                                                   QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
-        if dialog_answer == QtGui.QMessageBox.StandardButton.Yes:
+        dialog_answer = QtWidgets.QMessageBox.question(self, "Misner Splunk Tool", msg,
+                                                       QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+        if dialog_answer == QtWidgets.QMessageBox.StandardButton.Yes:
             return True
         else:
             return False
 
     def information_msg(self, msg):
         """Creates an information dialog"""
-        QtGui.QMessageBox.information(self, "Misner Splunk Tool", msg)
+        QtWidgets.QMessageBox.information(self, "Misner Splunk Tool", msg)
 
     def warning_msg(self, msg):
         """Creates a warning dialog"""
-        QtGui.QMessageBox.warning(self, "Misner Splunk Tool", msg)
+        QtWidgets.QMessageBox.warning(self, "Misner Splunk Tool", msg)
 
     def critical_msg(self, msg):
         """Creates a critical dialog"""
-        QtGui.QMessageBox.critical(self, "Misner Splunk Tool", msg)
+        QtWidgets.QMessageBox.critical(self, "Misner Splunk Tool", msg)
 
     def pull_configs(self):
         """Pull in configurations from flat configuration file misnersplunktool.conf"""
@@ -1176,7 +1176,7 @@ class MainWindow(QtGui.QMainWindow):
         for entry in collection:
             column = 0
             for field in fields:
-                table.setItem(row, column, QtGui.QTableWidgetItem())
+                table.setItem(row, column, QtWidgets.QTableWidgetItem())
                 table.item(row, column).setText(entry[field])
                 column += 1
             row += 1
@@ -1210,7 +1210,7 @@ class MainWindow(QtGui.QMainWindow):
         server = self.splunkd.server_name if self.splunkd.server_name else self.splunkd.mgmt_host
         default_filename = "%s %s" % (local_datetime_short, server)
 
-        filename, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Report", os.path.join(SCRIPT_DIR, default_filename),
+        filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Report", os.path.join(SCRIPT_DIR, default_filename),
                                                         "CSV (Comma delimited) (*.csv);;All Files (*.*)")
         if not filename:
             return
@@ -1273,7 +1273,7 @@ class MainWindow(QtGui.QMainWindow):
         except:
             license = "LICENSE.txt file missing"
 
-        dialog = QtGui.QMessageBox(self)
+        dialog = QtWidgets.QMessageBox(self)
         dialog.setIconPixmap(':/favorites.png')
         dialog.setWindowTitle("About")
         dialog.setText(ABOUT_TEXT % __version__)
@@ -1340,8 +1340,8 @@ class MainWindow(QtGui.QMainWindow):
             self.statusbar_msg("Refreshing configurations...")
             output = self.splunkd.refresh_config()
             self.statusbar_msg("")
-            dialog = QtGui.QMessageBox(self)
-            dialog.setIcon(QtGui.QMessageBox.Information)
+            dialog = QtWidgets.QMessageBox(self)
+            dialog.setIcon(QtWidgets.QMessageBox.Information)
             dialog.setWindowTitle("Misner Splunk Tool")
             dialog.setText("Configuration refresh complete.\n\n"
                            "See details below for reload results against each entity.")
@@ -1391,7 +1391,7 @@ class MainWindow(QtGui.QMainWindow):
 
         # Change deployment server
         message = "Enter new Deployment Server URI (i.e. 1.2.3.4:8089)"
-        new_deployment_server, dialog_not_cancelled = QtGui.QInputDialog.getText(self, "Misner Splunk Tool", message)
+        new_deployment_server, dialog_not_cancelled = QtWidgets.QInputDialog.getText(self, "Misner Splunk Tool", message)
         if dialog_not_cancelled:  # OK was pushed on dialog
             if new_deployment_server:  # Deployment server specified in Input Dialog
                 disabled = '0'
@@ -1506,12 +1506,12 @@ class MainWindow(QtGui.QMainWindow):
             self.ui.comboRestURI.addItem(combobox_text)
 
 
-class DiscoveryReportWindow(QtGui.QMainWindow):
+class DiscoveryReportWindow(QtWidgets.QMainWindow):
     """Object class for the main window"""
     def __init__(self):
         """Executed when the DiscoveryReportWindow() object is created"""
         # GUI Setup
-        QtGui.QMainWindow.__init__(self)
+        QtWidgets.QMainWindow.__init__(self)
         self.ui = Ui_DiscoveryReportWindow()
         self.ui.setupUi(self)
         self.setFixedSize(self.size())
@@ -1542,15 +1542,15 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
 
     def information_msg(self, msg):
         """Creates an information dialog"""
-        QtGui.QMessageBox.information(self, "Discovery Report", msg)
+        QtWidgets.QMessageBox.information(self, "Discovery Report", msg)
 
     def warning_msg(self, msg):
         """Creates a warning dialog"""
-        QtGui.QMessageBox.warning(self, "Discovery Report", msg)
+        QtWidgets.QMessageBox.warning(self, "Discovery Report", msg)
 
     def critical_msg(self, msg):
         """Creates a critical dialog"""
-        QtGui.QMessageBox.critical(self, "Discovery Report", msg)
+        QtWidgets.QMessageBox.critical(self, "Discovery Report", msg)
 
     def cleanup(self):
         """Clear widgets and associated objects from this window"""
@@ -1577,7 +1577,7 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
         """Selects the CSV file completed with Splunk instances and loads into memory, checking for syntax errors"""
         try:
             # Open file dialog to have user locate the CSV file
-            self.filename, _ = QtGui.QFileDialog.getOpenFileName(self, "Select CSV File", os.path.dirname(sys.argv[0]),
+            self.filename, _ = QtWidgets.QFileDialog.getOpenFileName(self, "Select CSV File", os.path.dirname(sys.argv[0]),
                                                                  "Comma-Separated Value Files (*.csv)")
             if not self.filename:
                 return
@@ -1616,10 +1616,10 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
             for instance in self.instances:
                 # Address column
                 host_port_pair = '%s:%s' % (instance['address'], instance['port'])
-                table.setItem(row_number, 0, QtGui.QTableWidgetItem())
+                table.setItem(row_number, 0, QtWidgets.QTableWidgetItem())
                 table.item(row_number, 0).setText(host_port_pair)
                 # Status column
-                table.setItem(row_number, 1, QtGui.QTableWidgetItem())
+                table.setItem(row_number, 1, QtWidgets.QTableWidgetItem())
                 table.item(row_number, 1).setText("Pending")
                 row_number += 1
         except:
@@ -1924,7 +1924,7 @@ class DiscoveryReportWindow(QtGui.QMainWindow):
 
             # Get destination filename from user for the completed report
             default_filename = "%s Discovery Report" % local_datetime_short
-            filename, _ = QtGui.QFileDialog.getSaveFileName(self, "Save Discovery Report",
+            filename, _ = QtWidgets.QFileDialog.getSaveFileName(self, "Save Discovery Report",
                                                             os.path.join(SCRIPT_DIR, default_filename),
                                                             "CSV (Comma delimited) (*.csv);;All Files (*.*)")
 
@@ -2092,19 +2092,17 @@ class DiscoveryReportWorker(QtCore.QThread):
         self.quit()
 
 
-class HelpWindow(QtWebKit.QWebView):
+class HelpWindow(QtWidgets.QTextEdit):
     """Object class for the help window"""
     def __init__(self):
         """Executed when the HelpWindow() object is created"""
         # GUI Setup
-        QtWebKit.QWebView.__init__(self)
+        QtWidgets.QTextEdit.__init__(self)
         self.setWindowTitle("Help - README.md")
         self.setWindowIcon(main_window.windowIcon())
         self.setWindowModality(QtCore.Qt.ApplicationModal)
         self.setContextMenuPolicy(QtCore.Qt.NoContextMenu)
-        settings = QtWebKit.QWebSettings.globalSettings()
-        settings.setFontFamily(QtWebKit.QWebSettings.StandardFont, 'Verdana')
-        settings.setFontSize(QtWebKit.QWebSettings.DefaultFontSize, 12)
+        self.resize(500, 400)
 
         # Retrieve markdown text from the README.md file in the script directory
         try:
@@ -2114,7 +2112,6 @@ class HelpWindow(QtWebKit.QWebView):
         except:
             html = "<html>README.md file missing</html>"
         self.setHtml(html)
-
 
 if __name__ == '__main__':
     # Pull available configs from misnertraptool.conf
@@ -2134,7 +2131,7 @@ if __name__ == '__main__':
             pass
 
     # PySide GUI
-    app = QtGui.QApplication(sys.argv)
+    app = QtWidgets.QApplication(sys.argv)
     main_window = MainWindow()
     help_window = HelpWindow()
     discoveryreport_window = DiscoveryReportWindow()
