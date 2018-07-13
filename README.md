@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2018.07.11  
+Misner Splunk Tool v2018.07.12  
 by Joe Misner  
 http://tools.misner.net/
 
@@ -224,16 +224,17 @@ The following dependencies are required to build the application:
 - Python module 'networkx' v2.1, https://pypi.python.org/pypi/networkx
 - Python module 'matplotlib' v2.2.2, https://pypi.python.org/pypi/matplotlib
 
-Steps:
+Steps to build installer for Windows:
 
 1. In a Command Prompt window, change to the directory containing this git project, for example:
     ```
     cd c:\misnersplunktool\
     ```
 
-2. Convert the PySide graphical user interface file `misnersplunktool.ui` into Python:
+2. Convert the PySide2 graphical user interface files into Python code:
     ```
     c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktool.ui -o misnersplunktoolui.py
+	c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktooldiscoveryreport.ui -o misnersplunktooldiscoveryreportui.py
     ```
     * Assumption is that Python 2.7 is installed in `c:\Python27\`
 
@@ -251,6 +252,28 @@ Steps:
     * Assumption is that Inno Setup 5 is installed in `c:\Program Files (x86)\Inno Setup 5\`
 
 5. Resulting installer executable in the format `Setup_MisnerSplunkTool_xxxxxxxx.exe` is created.
+
+Steps to build portable executable for Windows:
+
+1. In a Command Prompt window, change to the directory containing this git project, for example:
+    ```
+    cd c:\misnersplunktool\
+    ```
+
+2. Convert the PySide2 graphical user interface files into Python code:
+    ```
+    c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktool.ui -o misnersplunktoolui.py
+	c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktooldiscoveryreport.ui -o misnersplunktooldiscoveryreportui.py
+    ```
+    * Assumption is that Python 2.7 is installed in `c:\Python27\`
+
+3. Package the project with all dependencies using PyInstaller:
+    ```
+    c:\Python27\python.exe -O c:\Python27\Scripts\pyinstaller.exe misnersplunktool_onefile.spec -y
+    ```
+    * Assumption is that Python 2.7 is installed in `c:\Python27\`
+
+4. Resulting portable executable `misnersplunktool.exe` is created in the subdirectory `dist\`.
 
 
 
@@ -360,6 +383,13 @@ Changelog
  * ported from PySide to PySide2 (Qt4 to Qt5)
  * updated dependencies, including switch to 64-bit Python interpreter and PyInstaller v3.4.dev0 for better Qt5 hooks support
  * removed QtWebKit dependency in Qt, which was switched to the much larger QtWebEngine that was not necessary for this app
+
+2018.07.12
+
+ * fixed Discovery Report Topology execution and handling of discovered nodes
+ * added additional roles as viewable on Discovery Report Topology nodes
+ * updated order of guessing instance's Splunk role, standalone search head going above license master and deployment server
+ * updated Disk Usage in report to show total capacity along with usage
 
 
 

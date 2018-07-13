@@ -34,6 +34,8 @@ Changelog:
 2017.10.15 - fixed report code related to adjacencies causing a crash
 2017.10.17 - added primary_role attribute, which is a guess based on given server_roles data
 2018.07.11 - updated dependencies
+2018.07.12 - updated order of guessing instance's Splunk role, standalone search head going above license master and deployment server
+             updated Disk Usage in report to show total capacity along with usage
 """
 
 import re
@@ -45,7 +47,7 @@ import splunklib.client as client
 import splunklib.data as data
 import splunklib.results as results
 
-__version__ = '2018.07.11'
+__version__ = '2018.07.12'
 
 SPLUNK_HOST = 'localhost'
 SPLUNK_PORT = 8089
@@ -308,14 +310,14 @@ class Splunkd:
             self.primary_role = "Search Head (SHC Member)"
         elif 'cluster_master' in self.roles:
             self.primary_role = "Cluster Master"
+        elif 'search_head' in self.roles:  # also see: cluster_search_head
+            self.primary_role = "Search Head (Standalone)"
         elif 'deployment_server' in self.roles:
             self.primary_role = "Deployment Server"
         elif 'heavyweight_forwarder' in self.roles:
             self.primary_role = "Heavy Forwarder"
         elif 'license_master' in self.roles:
             self.primary_role = "License Master"
-        elif 'search_head' in self.roles:  # also see: cluster_search_head
-            self.primary_role = "Search Head (Standalone)"
         elif self.mode == 'dedicated forwarder':  # older versions of Splunk don't set a role
             self.primary_role = "Forwarder"
         else:
@@ -1270,12 +1272,13 @@ class Splunkd:
                 health = 'OK'
                 for mount in self.disk_partitions:
                     name = mount['name']
+                    total = mount['total']
                     percent_used = float(mount['used'][:-1])
                     if percent_used >= healthchecks['diskpartition_usage_warning'] and health in ['OK', 'Caution']:
                         health = 'Warning'
                     elif percent_used >= healthchecks['diskpartition_usage_caution'] and health == 'OK':
                         health = 'Caution'
-                    mounts.append("'%s': %i%%" % (name, percent_used))
+                    mounts.append("'%s' %i%% of %s" % (name, percent_used, total))
                 value = ', '.join(mounts) if mounts else 'None'
             else:
                 health = 'Unknown'
@@ -1320,9 +1323,9 @@ class Splunkd:
 
         report_append('Adjacencies', 'Deployment Server', 'N/A', self.deployment_server)
         report_append('Adjacencies', 'Deployment Clients', 'N/A', ', '.join(deployment_clients))
-        report_append('Adjacencies', 'IC Master Node', 'N/A', self.cluster_master_uri)
-        report_append('Adjacencies', 'IC Peer Nodes', 'N/A', ', '.join(cluster_peers))
-        report_append('Adjacencies', 'IC Search Heads', 'N/A', ', '.join(cluster_searchheads))
+        report_append('Adjacencies', 'IDXC Master Node', 'N/A', self.cluster_master_uri)
+        report_append('Adjacencies', 'IDXC Peer Nodes', 'N/A', ', '.join(cluster_peers))
+        report_append('Adjacencies', 'IDXC Search Heads', 'N/A', ', '.join(cluster_searchheads))
         report_append('Adjacencies', 'SHC Deployer', 'N/A', self.shcluster_deployer)
         report_append('Adjacencies', 'SHC Members', 'N/A', ', '.join(shcluster_members))
         report_append('Adjacencies', 'Search Peers', 'N/A', ', '.join(distributedsearch_peers))
@@ -1333,48 +1336,48 @@ class Splunkd:
 
         # Indexer Cluster
         if 'cluster_master' in self.roles:
-            report_append('Cluster', 'IC Label', 'N/A', self.cluster_label)
-            report_append('Cluster', 'IC Mode', 'N/A', self.cluster_mode)
-            report_append('Cluster', 'IC Site', 'N/A', self.cluster_site)
+            report_append('Cluster', 'IDXC Label', 'N/A', self.cluster_label)
+            report_append('Cluster', 'IDXC Mode', 'N/A', self.cluster_mode)
+            report_append('Cluster', 'IDXC Site', 'N/A', self.cluster_site)
 
             if healthchecks['cluster_maintenance_caution']:
                 if self.cluster_maintenance:
-                    report_append('Cluster', 'IC Maintenance Mode', 'Caution', 'True')
+                    report_append('Cluster', 'IDXC Maintenance Mode', 'Caution', 'True')
                 else:
-                    report_append('Cluster', 'IC Maintenance Mode', 'OK', 'False')
+                    report_append('Cluster', 'IDXC Maintenance Mode', 'OK', 'False')
 
             if healthchecks['cluster_rollingrestart_caution']:
                 if self.cluster_rollingrestart:
-                    report_append('Cluster', 'IC Rolling Restart', 'Caution', 'True')
+                    report_append('Cluster', 'IDXC Rolling Restart', 'Caution', 'True')
                 else:
-                    report_append('Cluster', 'IC Rolling Restart', 'OK', 'False')
+                    report_append('Cluster', 'IDXC Rolling Restart', 'OK', 'False')
 
             if healthchecks['cluster_alldatasearchable_warning']:
                 if not self.cluster_alldatasearchable:
-                    report_append('Cluster', 'IC All Data Searchable', 'Warning', 'False')
+                    report_append('Cluster', 'IDXC All Data Searchable', 'Warning', 'False')
                 else:
-                    report_append('Cluster', 'IC All Data Searchable', 'OK', 'True')
+                    report_append('Cluster', 'IDXC All Data Searchable', 'OK', 'True')
 
-            report_append('Cluster', 'IC Search Factor', 'N/A', str(self.cluster_searchfactor))
+            report_append('Cluster', 'IDXC Search Factor', 'N/A', str(self.cluster_searchfactor))
             if healthchecks['cluster_searchfactor_caution']:
                 if not self.cluster_searchfactormet:
-                    report_append('Cluster', 'IC Search Factor Met', 'Caution', 'False')
+                    report_append('Cluster', 'IDXC Search Factor Met', 'Caution', 'False')
                 else:
-                    report_append('Cluster', 'IC Search Factor Met', 'OK', 'True')
+                    report_append('Cluster', 'IDXC Search Factor Met', 'OK', 'True')
 
-            report_append('Cluster', 'IC Rep Factor', 'N/A', str(self.cluster_replicationfactor))
+            report_append('Cluster', 'IDXC Rep Factor', 'N/A', str(self.cluster_replicationfactor))
             if healthchecks['cluster_replicationfactor_caution']:
                 if not self.cluster_replicationfactormet:
-                    report_append('Cluster', 'IC Rep Factor Met', 'Caution', 'False')
+                    report_append('Cluster', 'IDXC Rep Factor Met', 'Caution', 'False')
                 else:
-                    report_append('Cluster', 'IC Rep Factor Met', 'OK', 'True')
+                    report_append('Cluster', 'IDXC Rep Factor Met', 'OK', 'True')
 
             if healthchecks['cluster_peersnotsearchable_warning'] and self.cluster_peers:
                 if self.cluster_peers_searchable < len(self.cluster_peers):
                     health = 'Warning'
                 else:
                     health = 'OK'
-                report_append('Cluster', 'IC Searchable Peers', health,
+                report_append('Cluster', 'IDXC Searchable Peers', health,
                               "%s of %s" % (self.cluster_peers_searchable, len(self.cluster_peers)))
 
             if healthchecks['cluster_searchheadsnotconnected_warning'] and self.cluster_searchheads:
@@ -1382,7 +1385,7 @@ class Splunkd:
                     health = 'Warning'
                 else:
                     health = 'OK'
-                report_append('Cluster', 'IC Connected Search Heads', health,
+                report_append('Cluster', 'IDXC Connected Search Heads', health,
                               "%s of %s" % (self.cluster_searchheads_connected,
                                             len(self.cluster_searchheads)))
 

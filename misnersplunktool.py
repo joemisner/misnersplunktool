@@ -53,7 +53,7 @@ from misnersplunktoolui import Ui_MainWindow
 from misnersplunktooldiscoveryreportui import Ui_DiscoveryReportWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2018.07.11'
+__version__ = '2018.07.12'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -1230,7 +1230,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 f.write(report)
             self.information_msg("Report saved to location:\n%s" % filename.replace('/', '\\'))
         except:
-            exc = traceback.format_exception(traceback.format_exception(*sys.exc_info()))
+            exc = traceback.format_exception(*sys.exc_info())
             msg = "Exception while building report:\n\n%s" % ''.join(exc)
             self.warning_msg(msg)
 
@@ -1665,7 +1665,7 @@ class DiscoveryReportWindow(QtWidgets.QMainWindow):
                 'webuser': "Web User"
             }
             nodes = {   # Splunkd instances categorized by their discovered primary role
-                'user': {'webuser'},
+                'user': frozenset({'webuser'}),
                 'sh': set(),
                 'idx': set(),
                 'hf': set(),
@@ -1683,29 +1683,63 @@ class DiscoveryReportWindow(QtWidgets.QMainWindow):
             Graph.add_nodes_from({'cornernw', 'cornerne', 'cornersw', 'cornerse'}, color='#ffffff')
             pos.update({'cornernw': (-10, 110), 'cornerne': (110, 110), 'cornersw': (-10, -10), 'cornerse': (110, -10)})
 
-            # Iterate through splunkd instances and categorize nodes by primary role
+            # Iterate through splunkd instances
+            instances = {}
             for instance in self.splunkd_polls:
-                labels[instance] = "%s\n%s" % (instance, self.splunkd_polls[instance].primary_role)
-                if self.splunkd_polls[instance].primary_role[0:11] == "Search Head":
-                    nodes['sh'].add(instance)
-                elif self.splunkd_polls[instance].primary_role[0:7] == "Indexer":
-                    nodes['idx'].add(instance)
-                elif self.splunkd_polls[instance].primary_role == "Heavy Forwarder":
-                    nodes['hf'].add(instance)
-                elif self.splunkd_polls[instance].primary_role == "Universal Forwarder":
-                    nodes['uf'].add(instance)
-                elif self.splunkd_polls[instance].primary_role == "Management Console":
-                    nodes['mc'].add(instance)
-                elif self.splunkd_polls[instance].primary_role == "Deployer (SHC)":
-                    nodes['shcd'].add(instance)
-                elif self.splunkd_polls[instance].primary_role == "Cluster Master":
-                    nodes['cm'].add(instance)
-                elif self.splunkd_polls[instance].primary_role == "Deployment Server":
-                    nodes['ds'].add(instance)
-                elif self.splunkd_polls[instance].primary_role == "License Master":
-                    nodes['lm'].add(instance)
-                elif self.splunkd_polls[instance].primary_role == "Forwarder":
-                    nodes['uf'].add(instance)
+                clean_name = str.lower(self.splunkd_polls[instance].server_name)
+                instances[clean_name] = self.splunkd_polls[instance]
+                primary_role = instances[clean_name].primary_role
+                all_roles = instances[clean_name].roles
+                labels[clean_name] = "%s\n%s" % (clean_name, primary_role)
+
+                # Add to nodes dictionary based on primary role
+                if primary_role[0:11] == "Search Head":
+                    nodes['sh'].add(clean_name)
+                elif primary_role[0:7] == "Indexer":
+                    nodes['idx'].add(clean_name)
+                elif primary_role == "Heavy Forwarder":
+                    nodes['hf'].add(clean_name)
+                elif primary_role == "Universal Forwarder":
+                    nodes['uf'].add(clean_name)
+                elif primary_role == "Management Console":
+                    nodes['mc'].add(clean_name)
+                elif primary_role == "Deployer (SHC)":
+                    nodes['shcd'].add(clean_name)
+                elif primary_role == "Cluster Master":
+                    nodes['cm'].add(clean_name)
+                elif primary_role == "Deployment Server":
+                    nodes['ds'].add(clean_name)
+                elif primary_role == "License Master":
+                    nodes['lm'].add(clean_name)
+                elif primary_role == "Forwarder":
+                    nodes['uf'].add(clean_name)
+
+                # Add additional roles to label
+                if ('universal_forwarder' in all_roles) and ("Universal Forwarder" not in labels[clean_name]):
+                    labels[clean_name] += "\nUniversal Forwarder"
+                if ('management_console' in all_roles) and ("Management Console" not in labels[clean_name]):
+                    labels[clean_name] += "\nManagement Console"
+                if ('cluster_slave' in all_roles) and ("Indexer" not in labels[clean_name]):
+                    labels[clean_name] += "\nIndexer (Cluster Slave)"
+                if ('indexer' in all_roles) and ("Indexer" not in labels[clean_name]):
+                    labels[clean_name] += "\nIndexer (Standalone)"
+                if ('shc_deployer' in all_roles) and ("Deployer (SHC)" not in labels[clean_name]):
+                    labels[clean_name] += "\nDeployer (SHC)"
+                if ('shc_captain' in all_roles) and ("Search Head" not in labels[clean_name]):
+                    labels[clean_name] += "\nSearch Head (SHC Captain)"
+                if ('shc_member' in all_roles) and ("Search Head" not in labels[clean_name]):
+                    labels[clean_name] += "\nSearch Head (SHC Member)"
+                if ('cluster_master' in all_roles) and ("Cluster Master" not in labels[clean_name]):
+                    labels[clean_name] += "\nCluster Master"
+                if ('search_head' in all_roles) and ("Search Head" not in labels[clean_name]):
+                    labels[clean_name] += "\nSearch Head (Standalone)"
+                if ('deployment_server' in all_roles) and ("Deployment Server" not in labels[clean_name]):
+                    labels[clean_name] += "\nDeployment Server"
+                if ('heavyweight_forwarder' in all_roles) and ("Heavy Forwarder" not in labels[clean_name]):
+                    labels[clean_name] += "\nHeavy Forwarder"
+                if ('license_master' in all_roles) and ("License Master" not in labels[clean_name]):
+                    labels[clean_name] += "\nLicense Master"
+
             ent_nodes = set().union(nodes['sh'], nodes['idx'], nodes['hf'], nodes['mc'],
                                     nodes['shcd'], nodes['cm'], nodes['ds'], nodes['uf'])
 
@@ -1737,6 +1771,7 @@ class DiscoveryReportWindow(QtWidgets.QMainWindow):
             def add_adjacency(discovered_node, dn_role, dn_color, adj_node, adj_color):
                 if discovered_node[0] == '(' and discovered_node[-1:] == ')':
                     return
+                discovered_node = discovered_node.lower().split(':')[0]
                 if discovered_node not in Graph.nodes:
                     nodes[dn_role].add(discovered_node)
                     labels[discovered_node] = "%s\nDiscovered Node" % discovered_node
@@ -1747,76 +1782,76 @@ class DiscoveryReportWindow(QtWidgets.QMainWindow):
             #  Web Access to Search Heads
             if topology['adjdraw_web']:
                 for sh in nodes['sh']:
-                    if sh not in self.splunkd_polls:
+                    if sh not in instances:
                         continue
-                    if self.splunkd_polls[sh].http_server:
-                        if {nodes['user'], sh}.issubset(Graph.nodes):  # check both sides of adjacency exist as nodes
+                    if instances[sh].http_server:
+                        if (nodes['user'] in Graph.nodes) and (sh in Graph.nodes):
                             Graph.add_edge(nodes['user'], sh, color='#' + topology['adjcolor_web'])
             #  Distributed Search from Search Heads
             if topology['adjdraw_distsearch']:
                 for sh in nodes['sh']:
-                    if sh not in self.splunkd_polls:
+                    if sh not in instances:
                         continue
-                    for peer in self.splunkd_polls[sh].distributedsearch_peers:
+                    for peer in instances[sh].distributedsearch_peers:
                         add_adjacency(peer['peerName'], 'idx', 'nodecolor_indexer', sh, 'adjcolor_distsearch')
             #  Data Forwarding from Heavy Forwarder
             if topology['adjdraw_datafwdheavyforwarder']:
                 for hf in nodes['hf']:
-                    if hf not in self.splunkd_polls:
+                    if hf not in instances:
                         continue
-                    for server in self.splunkd_polls[hf].forward_servers:
+                    for server in instances[hf].forward_servers:
                         add_adjacency(server['title'], 'idx', 'nodecolor_indexer', hf, 'adjcolor_datafwd')
             #  Data Forwarding from Universal Forwarder
             if topology['adjdraw_datafwduniversalforwarder']:
                 for uf in nodes['uf']:
-                    if uf not in self.splunkd_polls:
+                    if uf not in instances:
                         continue
-                    for server in self.splunkd_polls[uf].forward_servers:
+                    for server in instances[uf].forward_servers:
                         add_adjacency(server['title'], 'idx', 'nodecolor_indexer', uf, 'adjcolor_datafwd')
             #  Data Forwarding from Inputs
             if topology['adjdraw_datafwdinput']:
                 for ipt in nodes['input']:
-                    if ipt not in self.splunkd_polls:
+                    if ipt not in instances:
                         continue
-                    for server in self.splunkd_polls[ipt].forward_servers:
+                    for server in instances[ipt].forward_servers:
                         add_adjacency(server['title'], 'idx', 'nodecolor_indexer', ipt, 'adjcolor_datafwd')
             #  Cluster Management
             if topology['adjdraw_clustermgmt']:
                 for cm in nodes['cm']:
-                    if cm not in self.splunkd_polls:
+                    if cm not in instances:
                         continue
-                    for peer in self.splunkd_polls[cm].cluster_peers:
+                    for peer in instances[cm].cluster_peers:
                         add_adjacency(peer['location'], 'idx', 'nodecolor_indexer', cm, 'adjcolor_clustermgmt')
             #  Bucket Replication
             if topology['adjdraw_bucketrep']:
                 for idx in nodes['idx']:
-                    if idx not in self.splunkd_polls:
+                    if idx not in instances:
                         continue
-                    for peer in self.splunkd_polls[idx].cluster_peers:
+                    for peer in instances[idx].cluster_peers:
                         add_adjacency(peer['location'], 'idx', 'nodecolor_indexer', idx, 'adjcolor_bucketrep')
             #  SHC Deployer
             if topology['adjdraw_shcdeployment']:
                 for sh in nodes['sh']:
-                    if sh not in self.splunkd_polls:
+                    if sh not in instances:
                         continue
-                    deployer = self.splunkd_polls[sh].shcluster_deployer
+                    deployer = instances[sh].shcluster_deployer
                     add_adjacency(deployer, 'shcd', 'nodecolor_shcdeployer', sh, 'adjcolor_shcdeployment')
             #  Since potentially discovered nodes below don't have a clear Splunk role, discover them last
             #  Distributed Search from Management Console
             if topology['adjdraw_mgmtconsole']:
                 for mc in nodes['mc']:
-                    for peer in self.splunkd_polls[mc].distributedsearch_peers:
+                    for peer in instances[mc].distributedsearch_peers:
                         add_adjacency(peer['peerName'], 'other', 'nodecolor_others', mc, 'adjcolor_mgmtconsole')
             #  Deployment Server
             if topology['adjdraw_deployment']:
                 for ds in nodes['ds']:
-                    for client in self.splunkd_polls[ds].deployment_clients:
+                    for client in instances[ds].deployment_clients:
                         dns_mgmt_pair = '%s:%s' % (client['dns'], client['mgmt'])
                         add_adjacency(dns_mgmt_pair, 'other', 'nodecolor_others', ds, 'adjcolor_deployment')
             #  License
             if topology['adjdraw_license']:
                 for slave in ent_nodes:
-                    license_master = self.splunkd_polls[slave].license_master
+                    license_master = instances[slave].license_master
                     add_adjacency(license_master, 'other', 'nodecolor_others', slave, 'adjcolor_license')
 
             # Return error if not enough nodes to paint
@@ -1886,7 +1921,7 @@ class DiscoveryReportWindow(QtWidgets.QMainWindow):
             matplotlib.pyplot.get_current_fig_manager().canvas.set_window_title('Topology')
             matplotlib.pyplot.show()
         except:
-            exc = traceback.format_exception(traceback.format_exception(*sys.exc_info()))
+            exc = traceback.format_exception(*sys.exc_info())
             msg = "Exception while building topology:\n\n%s" % ''.join(exc)
             self.warning_msg(msg)
 
@@ -1937,7 +1972,7 @@ class DiscoveryReportWindow(QtWidgets.QMainWindow):
                 f.write(report)
                 self.information_msg("Report saved to location:\n%s" % filename.replace('/', '\\'))
         except:
-            exc = traceback.format_exception(traceback.format_exception(*sys.exc_info()))
+            exc = traceback.format_exception(*sys.exc_info())
             msg = "Exception while building report:\n\n%s" % ''.join(exc)
             self.warning_msg(msg)
 
