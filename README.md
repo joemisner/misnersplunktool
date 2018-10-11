@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2018.07.12  
+Misner Splunk Tool v2018.10.09
 by Joe Misner  
 http://tools.misner.net/
 
@@ -215,7 +215,7 @@ The following dependencies are required to build the application:
 - Misner Splunk Tool source
 - Python 64-bit v2.7.15, https://www.python.org/
 - Inno Setup v5.5.9, http://www.jrsoftware.org/
-- Python module 'PyInstaller' v3.4.dev0, https://pypi.python.org/pypi/PyInstaller
+- Python module 'PyInstaller' v3.4, https://pypi.python.org/pypi/PyInstaller
 - Python module 'PySide2' v5.11, https://pypi.python.org/pypi/PySide2
 - Python package 'requests' v2.19.1, https://pypi.python.org/pypi/requests
 - Python module 'splunk-sdk' v1.6.5, https://pypi.python.org/pypi/splunk-sdk
@@ -390,6 +390,10 @@ Changelog
  * added additional roles as viewable on Discovery Report Topology nodes
  * updated order of guessing instance's Splunk role, standalone search head going above license master and deployment server
  * updated Disk Usage in report to show total capacity along with usage
+
+2018.10.09
+
+ * fixed Discovery Report Topology handling of discovered nodes
 
 
 

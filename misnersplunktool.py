@@ -53,7 +53,7 @@ from misnersplunktoolui import Ui_MainWindow
 from misnersplunktooldiscoveryreportui import Ui_DiscoveryReportWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2018.07.12'
+__version__ = '2018.10.09'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -1686,7 +1686,7 @@ class DiscoveryReportWindow(QtWidgets.QMainWindow):
             # Iterate through splunkd instances
             instances = {}
             for instance in self.splunkd_polls:
-                clean_name = str.lower(self.splunkd_polls[instance].server_name)
+                clean_name = str.lower(self.splunkd_polls[instance].server_name).split('.')[0]
                 instances[clean_name] = self.splunkd_polls[instance]
                 primary_role = instances[clean_name].primary_role
                 all_roles = instances[clean_name].roles
@@ -1771,7 +1771,18 @@ class DiscoveryReportWindow(QtWidgets.QMainWindow):
             def add_adjacency(discovered_node, dn_role, dn_color, adj_node, adj_color):
                 if discovered_node[0] == '(' and discovered_node[-1:] == ')':
                     return
-                discovered_node = discovered_node.lower().split(':')[0]
+                discovered_node = discovered_node.split(':')[0]  # Return address without port
+
+                # If IP address, try and resolve to host
+                ipaddr_regex = r"\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b"
+                if re.findall(ipaddr_regex, discovered_node):
+                    try:
+                        discovered_node = socket.gethostbyaddr(discovered_node)[0].lower().split('.')[0]  # Resolved by DNS, return hostname without suffix
+                    except:
+                        pass  # Not found by DNS, return IP
+                else:
+                    discovered_node = discovered_node.lower().split('.')[0]  # Not an IP, return hostname without suffix
+
                 if discovered_node not in Graph.nodes:
                     nodes[dn_role].add(discovered_node)
                     labels[discovered_node] = "%s\nDiscovered Node" % discovered_node
@@ -2147,6 +2158,7 @@ class HelpWindow(QtWidgets.QTextEdit):
         except:
             html = "<html>README.md file missing</html>"
         self.setHtml(html)
+
 
 if __name__ == '__main__':
     # Pull available configs from misnertraptool.conf
