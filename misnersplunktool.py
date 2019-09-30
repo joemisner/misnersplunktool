@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 misnersplunktool.py - Misner Splunk Tool
-Copyright (C) 2015-2018 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2019 Joe Misner <joe@misner.net>
 http://tools.misner.net/
 
 This program is free software; you can redistribute it and/or modify
@@ -53,7 +53,7 @@ from misnersplunktoolui import Ui_MainWindow
 from misnersplunktooldiscoveryreportui import Ui_DiscoveryReportWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2018.10.09'
+__version__ = '2019.09.29'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -638,6 +638,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def statusbar_msg(self, msg):
         """Sends a message to the statusbar"""
         self.ui.statusbar.showMessage(msg)
+        QtCore.QCoreApplication.processEvents()
 
     def question_msg_yesno(self, msg):
         dialog_answer = QtWidgets.QMessageBox.question(self, "Misner Splunk Tool", msg,
@@ -815,6 +816,8 @@ class MainWindow(QtWidgets.QMainWindow):
         #  Top
         self.ui.labelRole.setPixmap(":/blank.png")
         self.ui.labelRole.setToolTip(None)
+        self.ui.labelHealth.setPixmap(":/health_unknown.png")
+        self.ui.labelHealth.setToolTip(None)
         self.ui.labelHost.setText('(none)')
         self.ui.labelType.setText('(none)')
         self.ui.labelGUID.setText('(none)')
@@ -932,6 +935,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.splunkd.get_services_licenser()
             self.statusbar_msg('Polling distributed search info...')
             self.splunkd.get_services_search()
+            self.statusbar_msg('Polling health...')
+            self.splunkd.get_services_server_health_details()
             self.statusbar_msg('Polling introspection...')
             self.splunkd.get_services_server_status()
         except socket.error as e:
@@ -966,6 +971,21 @@ class MainWindow(QtWidgets.QMainWindow):
             "Universal Forwarder": ':/forwarder.png'
         }
         self.ui.labelRole.setPixmap(role_icons[self.splunkd.primary_role])
+
+        # Setup health icon
+        self.statusbar_msg('Populating GUI, health icon...')
+        health = ['Splunkd Health = ' + self.splunkd.health_splunkd_overall + '\n\nFeatures:']
+        features = self.splunkd.health_splunkd_features
+        for feature in features:
+            health.append(feature + " = " + features[feature])
+        self.ui.labelHealth.setToolTip('\n'.join(health))
+        health_icons = {  # Map this instance's splunkd health to an appropriate icon
+            "green": ':/health_green.png',
+            "yellow": ':/health_yellow.png',
+            "red": ':/health_red.png',
+            "unknown": ':/health_unknown.png'
+        }
+        self.ui.labelHealth.setPixmap(health_icons[self.splunkd.health_splunkd_overall])
 
         # Fill in top labels
         self.statusbar_msg('Populating GUI, top labels...')

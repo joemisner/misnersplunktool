@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 """
 misnersplunkdwrapper.py - Misner Splunkd Wrapper
-Copyright (C) 2015-2018 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2019 Joe Misner <joe@misner.net>
 http://tools.misner.net/
 
 This program is free software; you can redistribute it and/or modify
@@ -36,6 +36,7 @@ Changelog:
 2018.07.11 - updated dependencies
 2018.07.12 - updated order of guessing instance's Splunk role, standalone search head going above license master and deployment server
              updated Disk Usage in report to show total capacity along with usage
+2019.09.29 - added health status
 """
 
 import re
@@ -47,7 +48,7 @@ import splunklib.client as client
 import splunklib.data as data
 import splunklib.results as results
 
-__version__ = '2018.07.12'
+__version__ = '2019.09.29'
 
 SPLUNK_HOST = 'localhost'
 SPLUNK_PORT = 8089
@@ -193,6 +194,11 @@ class Splunkd:
         # get_services_search()
         self._services_search_distributed_peers = None
         self.distributedsearch_peers = []
+
+        # get_services_server_health_details()
+        self._services_server_health_details = None
+        self.health_splunkd_overall = ""
+        self.health_splunkd_features = {}
 
         # get_services_server_status()
         self._services_server_status_partitionsspace = None
@@ -967,6 +973,20 @@ class Splunkd:
         except KeyError:
             pass
 
+    def get_services_server_health_details(self):
+        """GET /services/server/health/splunkd/details"""
+        self.health_splunkd_overall = 'unknown'
+        self.health_splunkd_features = {}
+        try:
+            self._services_server_health_details = self.rest_call('/services/server/health/splunkd/details', count=-1)
+            health = self._services_server_health_details['feed']['entry']['content']
+            self.health_splunkd_overall = health['health']
+            features = health['features']
+            for feature in features:
+                self.health_splunkd_features[feature] = features[feature]['health']
+        except KeyError:
+            pass
+
     def get_services_server_status(self):
         """GET /services/server/status/*"""
         # Disk Partitions
@@ -1205,6 +1225,29 @@ class Splunkd:
                 value = 'None'
             report_append('Server', 'Messages', health, value)
 
+        if self.health_splunkd_overall:
+            if self.health_splunkd_overall == 'green':
+                health = 'OK'
+                value = 'Green'
+            elif self.health_splunkd_overall == 'yellow':
+                health = 'Caution'
+                value = 'Yellow'
+            elif self.health_splunkd_overall == 'red':
+                health = 'Warning'
+                value = 'Red'
+            else:
+                health = 'Unknown'
+                value = self.health_splunkd_overall
+            report_append('Server', 'Splunkd Health', health, value)
+
+        if self.health_splunkd_features:
+            features = []
+            health = 'N/A'
+            for feature in self.health_splunkd_features:
+                features.append(feature + " = " + self.health_splunkd_features[feature])
+            value = ', '.join(features) if features else 'None'
+            report_append('Server', 'Splunkd Health (by feature)', health, value)
+
         #  Resources
         if healthchecks['cpu_cores_caution']:
             if self.cores:
@@ -1285,7 +1328,7 @@ class Splunkd:
                 value = '?'
             report_append('Resources', 'Disk Usage', health, value)
 
-        # Ports
+        #  Ports
         report_append('Ports', 'Management Port', 'N/A', str(self.mgmt_port))
         report_append('Ports', 'Web Port', 'N/A', str(self.http_port))
         report_append('Ports', 'Receiving Ports', 'N/A', ', '.join(map(str, self.receiving_ports)))
@@ -1294,7 +1337,7 @@ class Splunkd:
         report_append('Ports', 'Replication Port', 'N/A', str(self.cluster_replicationport))
         report_append('Ports', 'KV Store Port', 'N/A', str(self.kvstore_port))
 
-        # Adjacencies
+        #  Adjacencies
         deployment_clients = []
         cluster_peers = []
         cluster_searchheads = []
@@ -1334,7 +1377,7 @@ class Splunkd:
         report_append('Adjacencies', 'License Master', 'N/A', self.license_master)
         report_append('Adjacencies', 'License Slaves', 'N/A', ', '.join(license_slaves))
 
-        # Indexer Cluster
+        #  Indexer Cluster
         if 'cluster_master' in self.roles:
             report_append('Cluster', 'IDXC Label', 'N/A', self.cluster_label)
             report_append('Cluster', 'IDXC Mode', 'N/A', self.cluster_mode)
@@ -1389,7 +1432,7 @@ class Splunkd:
                               "%s of %s" % (self.cluster_searchheads_connected,
                                             len(self.cluster_searchheads)))
 
-        # Search Head Cluster
+        #  Search Head Cluster
         if 'shc_member' in self.roles:
             report_append('Cluster', 'SHC Label', 'N/A', self.shcluster_label)
             report_append('Cluster', 'SHC Rep Factor', 'N/A', str(self.shcluster_replicationfactor))
@@ -1412,7 +1455,7 @@ class Splunkd:
                 else:
                     report_append('Cluster', 'SHC Minimum Peers Joined', 'OK', 'True')
 
-        # Counts
+        #  Counts
         report_append('Counts', 'Messages', 'N/A', str(len(self.messages)))
         report_append('Counts', 'Apps', 'N/A', str(len(self.apps)))
         report_append('Counts', 'Forwarders', 'N/A', str(len(self.cookedtcp_status)))

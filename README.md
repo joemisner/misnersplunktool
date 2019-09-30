@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2018.10.09
+Misner Splunk Tool v2019.09.29
 by Joe Misner  
 http://tools.misner.net/
 
@@ -395,12 +395,17 @@ Changelog
 
  * fixed Discovery Report Topology handling of discovered nodes
 
+2019.09.29
+
+ * enhanced responsiveness of GUI during splunkd polling
+ * added splunkd health status to GUI and Report
+
 
 
 License
 -------
 
-Copyright (C) 2015-2018 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2019 Joe Misner <joe@misner.net>
 
 See LICENSE.txt in this application's installation directory for
 complete license information.

@@ -1,5 +1,9 @@
 <RCC>
   <qresource prefix="/">
+    <file>health_green.png</file>
+    <file>health_red.png</file>
+    <file>health_unknown.png</file>
+    <file>health_yellow.png</file>
     <file>blank.png</file>
     <file>managementconsole.png</file>
     <file>favorites.png</file>
@@ -10,7 +14,6 @@
     <file>licenseserver.png</file>
     <file>masternode.png</file>
     <file>searchhead.png</file>
-    <file>favorites.svg</file>
     <file>favorites.ico</file>
   </qresource>
 </RCC>

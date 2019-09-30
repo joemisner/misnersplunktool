@@ -2561,6 +2561,25 @@ p, li { white-space: pre-wrap; }
      <enum>QLineEdit::Password</enum>
     </property>
    </widget>
+   <widget class="QLabel" name="labelHealth">
+    <property name="geometry">
+     <rect>
+      <x>720</x>
+      <y>7</y>
+      <width>17</width>
+      <height>18</height>
+     </rect>
+    </property>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="pixmap">
+     <pixmap>health_unknown.png</pixmap>
+    </property>
+   </widget>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
