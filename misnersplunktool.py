@@ -53,7 +53,7 @@ from misnersplunktoolui import Ui_MainWindow
 from misnersplunktooldiscoveryreportui import Ui_DiscoveryReportWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2019.09.29'
+__version__ = '2019.09.30'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -197,7 +197,7 @@ ABOUT_TEXT = """
 <h3>Misner Splunk Tool</h3>
 Version %s
 <p>
-Copyright (C) 2015-2018 Joe Misner &lt;<a href="mailto:joe@misner.net">joe@misner.net</a>&gt;
+Copyright (C) 2015-2019 Joe Misner &lt;<a href="mailto:joe@misner.net">joe@misner.net</a>&gt;
 <a href="http://tools.misner.net/">http://tools.misner.net/</a>
 <p>
 Splunk is a trademark of Splunk Inc. in the United States and other
@@ -587,6 +587,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.buttonPoll.move(self.ui.centralwidget.width() - 61, self.ui.buttonPoll.y())
         self.ui.labelOS.resize(self.ui.centralwidget.width() - 608, self.ui.labelOS.height())
         self.ui.labelSystem.resize(self.ui.centralwidget.width() - 608, self.ui.labelSystem.height())
+        self.ui.labelHealth.move(self.ui.centralwidget.width() - 29, self.ui.labelHealth.y())
 
         t = self.ui.tabWidgetMain
         t.resize(self.ui.centralwidget.width() - 18, self.ui.centralwidget.height() - 115)

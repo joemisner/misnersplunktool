@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2019.09.29
+Misner Splunk Tool v2019.09.30
 by Joe Misner  
 http://tools.misner.net/
 
@@ -399,6 +399,10 @@ Changelog
 
  * enhanced responsiveness of GUI during splunkd polling
  * added splunkd health status to GUI and Report
+
+2019.09.30
+
+ * fix health icon display bug
 
 
 
