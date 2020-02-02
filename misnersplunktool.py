@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 misnersplunktool.py - Misner Splunk Tool
-Copyright (C) 2015-2019 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2020 Joe Misner <joe@misner.net>
 http://tools.misner.net/
 
 This program is free software; you can redistribute it and/or modify
@@ -19,13 +19,13 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 Dependencies:
-- Python 64-bit v2.7.15, https://www.python.org/
-- Python module 'splunk-sdk' v1.6.5, https://pypi.python.org/pypi/splunk-sdk
-- Python module 'PySide2' v5.11, https://pypi.python.org/pypi/PySide2
-- Python module 'Markdown' v2.6.11, https://pypi.python.org/pypi/Markdown
-- Python module 'Pygments' v2.2.0, https://pypi.python.org/pypi/Pygments
-- Python module 'networkx' v2.1, https://pypi.python.org/pypi/networkx
-- Python module 'matplotlib' v2.2.2, https://pypi.python.org/pypi/matplotlib
+- Python v3.8.1 64-bit, https://www.python.org/
+- Python module 'splunk-sdk' v1.6.11, https://pypi.python.org/pypi/splunk-sdk
+- Python module 'PySide2' v5.14.1, https://pypi.python.org/pypi/PySide2
+- Python module 'Markdown' v3.1.1, https://pypi.python.org/pypi/Markdown
+- Python module 'Pygments' v2.5.5, https://pypi.python.org/pypi/Pygments
+- Python module 'networkx' v2.4, https://pypi.python.org/pypi/networkx
+- Python module 'matplotlib' v3.1.2, https://pypi.python.org/pypi/matplotlib
 - Python module 'misnersplunktoolui.py'
 - Python module 'misnersplunktooldiscoveryreportui.py'
 - Python module 'misnersplunkdwrapper.py'
@@ -40,7 +40,7 @@ import traceback
 import math
 import re
 import csv
-import ConfigParser
+import configparser
 import markdown
 import networkx
 import matplotlib.pyplot
@@ -53,7 +53,7 @@ from misnersplunktoolui import Ui_MainWindow
 from misnersplunktooldiscoveryreportui import Ui_DiscoveryReportWindow
 from misnersplunkdwrapper import Splunkd
 
-__version__ = '2019.09.30'
+__version__ = '2020.02.01'
 
 SCRIPT_DIR = os.path.dirname(sys.argv[0])
 CONFIG_FILENAME = 'misnersplunktool.conf'
@@ -197,7 +197,7 @@ ABOUT_TEXT = """
 <h3>Misner Splunk Tool</h3>
 Version %s
 <p>
-Copyright (C) 2015-2019 Joe Misner &lt;<a href="mailto:joe@misner.net">joe@misner.net</a>&gt;
+Copyright (C) 2015-2020 Joe Misner &lt;<a href="mailto:joe@misner.net">joe@misner.net</a>&gt;<br>
 <a href="http://tools.misner.net/">http://tools.misner.net/</a>
 <p>
 Splunk is a trademark of Splunk Inc. in the United States and other
@@ -1289,10 +1289,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def actionAbout_triggered(self):
         """Help > About dialog box"""
         try:
-            with open('LICENSE.txt', 'r') as f:
+            with open(os.path.join(SCRIPT_DIR, 'LICENSE.txt'), 'r', encoding='utf-8') as f:
                 license = f.read()
         except:
-            license = "LICENSE.txt file missing"
+            license = "Unable to read LICENSE.txt file"
 
         dialog = QtWidgets.QMessageBox(self)
         dialog.setIconPixmap(':/favorites.png')
@@ -1368,7 +1368,7 @@ class MainWindow(QtWidgets.QMainWindow):
                            "See details below for reload results against each entity.")
             dialog.setDetailedText(output)
             dialog.exec_()
-        except Exception, e:
+        except Exception as e:
             self.critical_msg("Unable to refresh configuration:\n"
                               "%s" % e)
         except:
@@ -2173,22 +2173,22 @@ class HelpWindow(QtWidgets.QTextEdit):
 
         # Retrieve markdown text from the README.md file in the script directory
         try:
-            with open(os.path.join(SCRIPT_DIR, 'README.md'), 'r') as f:
+            with open(os.path.join(SCRIPT_DIR, 'README.md'), 'r', encoding='utf-8') as f:
                 readme_file = f.read()
-            html = markdown.markdown(readme_file, ['markdown.extensions.extra', 'markdown.extensions.sane_lists'])
+            html = markdown.markdown(readme_file)
         except:
-            html = "<html>README.md file missing</html>"
+            html = "<html>Unable to read README.md file</html>"
         self.setHtml(html)
 
 
 if __name__ == '__main__':
     # Pull available configs from misnertraptool.conf
-    config = ConfigParser.ConfigParser(allow_no_value=True)
+    config = configparser.ConfigParser(allow_no_value=True)
     config_file = os.path.join(SCRIPT_DIR, CONFIG_FILENAME)
     if os.path.isfile(config_file):  # Read in configuration file if it exists
         try:
             config.read(config_file)
-        except ConfigParser.ParsingError, e:
+        except configparser.ParsingError as e:
             pass
     else:  # If configuration file is missing, build a default file
         try:

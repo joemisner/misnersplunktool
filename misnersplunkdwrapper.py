@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 misnersplunkdwrapper.py - Misner Splunkd Wrapper
-Copyright (C) 2015-2019 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2020 Joe Misner <joe@misner.net>
 http://tools.misner.net/
 
 This program is free software; you can redistribute it and/or modify
@@ -19,9 +19,9 @@ along with this program; if not, write to the Free Software Foundation,
 Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 
 Dependencies:
-- Python v2.7.15 64-bit, https://www.python.org/
-- Python package 'requests' v2.19.1, https://pypi.python.org/pypi/requests
-- Python module 'splunk-sdk' v1.6.5, https://pypi.python.org/pypi/splunk-sdk
+- Python v3.8.1 64-bit, https://www.python.org/
+- Python package 'requests' v2.22.0, https://pypi.python.org/pypi/requests
+- Python module 'splunk-sdk' v1.6.11, https://pypi.python.org/pypi/splunk-sdk
 
 Changelog:
 2017.02.25 - initial version, forked from misnersplunktool.py
@@ -37,18 +37,21 @@ Changelog:
 2018.07.12 - updated order of guessing instance's Splunk role, standalone search head going above license master and deployment server
              updated Disk Usage in report to show total capacity along with usage
 2019.09.29 - added health status
+2020.02.01 - migrated to Python3 and updated dependencies
 """
 
 import re
 import time
 import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+#from requests.packages.urllib3.exceptions import InsecureRequestWarning
+#requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 import splunklib.client as client
 import splunklib.data as data
 import splunklib.results as results
 
-__version__ = '2019.09.29'
+__version__ = '2020.02.01'
 
 SPLUNK_HOST = 'localhost'
 SPLUNK_PORT = 8089
@@ -244,7 +247,7 @@ class Splunkd:
         headers = r.headers
         reason = r.reason
         status = r.status_code
-        body = str(r.text.encode('ascii', 'replace'))
+        body = str(r.text).encode('utf-8', 'replace')
         if output_format == 'structured':
             if headers['content-type'][:8] == 'text/xml':
                 return data.load(body)
@@ -293,7 +296,7 @@ class Splunkd:
         else:
             self.startup_time_formatted = '(unknown)'
         self.cores = int(self._service_info['numberOfCores']) if 'numberOfCores' in self._service_info else 0
-        self.ram = self._service_info['physicalMemoryMB'] if 'physicalMemoryMB' in self._service_info else 0
+        self.ram = int(self._service_info['physicalMemoryMB']) if 'physicalMemoryMB' in self._service_info else 0
         self.roles = self._service_info['server_roles'] if 'server_roles' in self._service_info else ['(unknown)']
         self.product = self._service_info['product_type'] if 'product_type' in self._service_info else '(unknown)'
         self.mode = self._service_info['mode'] if 'mode' in self._service_info else '(unknown)'
@@ -1125,7 +1128,7 @@ class Splunkd:
                     uri = '/servicesNS/admin/search/%s/_reload' % endpoint
                     self.service.post(uri, owner='nobody', app='search', sharing='user')
                     output += 'Refreshing %s OK\n' % endpoint.ljust(39, ' ')
-                except Exception, e:
+                except Exception as e:
                     output += 'Refreshing %s %s\n' % (endpoint.ljust(42, ' '), e)
                 except:
                     output += 'Refreshing %s %s\n' % (endpoint.ljust(42, ' '), 'unspecified error')

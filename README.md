@@ -1,7 +1,7 @@
 Misner Splunk Tool
 ==================
 
-Misner Splunk Tool v2019.09.30
+Misner Splunk Tool v2020.02.01  
 by Joe Misner  
 http://tools.misner.net/
 
@@ -213,16 +213,16 @@ Building
 The following dependencies are required to build the application:
 
 - Misner Splunk Tool source
-- Python 64-bit v2.7.15, https://www.python.org/
-- Inno Setup v5.5.9, http://www.jrsoftware.org/
-- Python module 'PyInstaller' v3.4, https://pypi.python.org/pypi/PyInstaller
-- Python module 'PySide2' v5.11, https://pypi.python.org/pypi/PySide2
-- Python package 'requests' v2.19.1, https://pypi.python.org/pypi/requests
-- Python module 'splunk-sdk' v1.6.5, https://pypi.python.org/pypi/splunk-sdk
-- Python module 'Markdown' v2.6.11, https://pypi.python.org/pypi/Markdown
-- Python module 'Pygments' v2.2.0, https://pypi.python.org/pypi/Pygments
-- Python module 'networkx' v2.1, https://pypi.python.org/pypi/networkx
-- Python module 'matplotlib' v2.2.2, https://pypi.python.org/pypi/matplotlib
+- Python v3.8.1 64-bit, https://www.python.org/
+- Inno Setup v6.0.3, http://www.jrsoftware.org/
+- Python module 'PyInstaller' v3.6, https://pypi.python.org/pypi/PyInstaller
+- Python module 'PySide2' v5.14.1, https://pypi.python.org/pypi/PySide2
+- Python package 'requests' v2.22.0, https://pypi.python.org/pypi/requests
+- Python module 'splunk-sdk' v1.6.11, https://pypi.python.org/pypi/splunk-sdk
+- Python module 'Markdown' v3.1.1, https://pypi.python.org/pypi/Markdown
+- Python module 'Pygments' v2.5.2, https://pypi.python.org/pypi/Pygments
+- Python module 'networkx' v2.4, https://pypi.python.org/pypi/networkx
+- Python module 'matplotlib' v3.1.2, https://pypi.python.org/pypi/matplotlib
 
 Steps to build installer for Windows:
 
@@ -233,23 +233,23 @@ Steps to build installer for Windows:
 
 2. Convert the PySide2 graphical user interface files into Python code:
     ```
-    c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktool.ui -o misnersplunktoolui.py
-	c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktooldiscoveryreport.ui -o misnersplunktooldiscoveryreportui.py
+    c:\Python38\Scripts\pyside2-uic.exe -x misnersplunktool.ui -o misnersplunktoolui.py
+	c:\Python38\Scripts\pyside2-uic.exe -x misnersplunktooldiscoveryreport.ui -o misnersplunktooldiscoveryreportui.py
     ```
-    * Assumption is that Python 2.7 is installed in `c:\Python27\`
+    * Assumption is that Python 3.8 is installed in `c:\Python38\`
 
 3. Package the project with all dependencies using PyInstaller:
     ```
-    c:\Python27\python.exe -O c:\Python27\Scripts\pyinstaller.exe misnersplunktool.spec -y
+    c:\Python38\python.exe -O c:\Python27\Scripts\pyinstaller.exe misnersplunktool.spec -y
     ```
-    * Assumption is that Python 2.7 is installed in `c:\Python27\`
+    * Assumption is that Python 3.8 is installed in `c:\Python38\`
     * Resulting package will be stored in the subdirectory `dist\Misner Splunk Tool\`
 
 4. Compile the PyInstaller package into an installer executable using Inno Setup:
     ```
-    "c:\Program Files (x86)\Inno Setup 5\iscc.exe" innosetup.iss
+    "c:\Program Files (x86)\Inno Setup 6\iscc.exe" innosetup.iss
     ```
-    * Assumption is that Inno Setup 5 is installed in `c:\Program Files (x86)\Inno Setup 5\`
+    * Assumption is that Inno Setup 6 is installed in `c:\Program Files (x86)\Inno Setup 6\`
 
 5. Resulting installer executable in the format `Setup_MisnerSplunkTool_xxxxxxxx.exe` is created.
 
@@ -262,16 +262,16 @@ Steps to build portable executable for Windows:
 
 2. Convert the PySide2 graphical user interface files into Python code:
     ```
-    c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktool.ui -o misnersplunktoolui.py
-	c:\Python27\Scripts\pyside2-uic.exe -x misnersplunktooldiscoveryreport.ui -o misnersplunktooldiscoveryreportui.py
+    c:\Python38\Scripts\pyside2-uic.exe -x misnersplunktool.ui -o misnersplunktoolui.py
+	c:\Python38\Scripts\pyside2-uic.exe -x misnersplunktooldiscoveryreport.ui -o misnersplunktooldiscoveryreportui.py
     ```
-    * Assumption is that Python 2.7 is installed in `c:\Python27\`
+    * Assumption is that Python 3.8 is installed in `c:\Python38\`
 
 3. Package the project with all dependencies using PyInstaller:
     ```
-    c:\Python27\python.exe -O c:\Python27\Scripts\pyinstaller.exe misnersplunktool_onefile.spec -y
+    c:\Python38\python.exe -O c:\Python27\Scripts\pyinstaller.exe misnersplunktool_onefile.spec -y
     ```
-    * Assumption is that Python 2.7 is installed in `c:\Python27\`
+    * Assumption is that Python 3.8 is installed in `c:\Python38\`
 
 4. Resulting portable executable `misnersplunktool.exe` is created in the subdirectory `dist\`.
 
@@ -403,13 +403,17 @@ Changelog
 2019.09.30
 
  * fix health icon display bug
+ 
+2020.02.01
+
+ * migrated to Python3 and updated dependencies
 
 
 
 License
 -------
 
-Copyright (C) 2015-2019 Joe Misner <joe@misner.net>
+Copyright (C) 2015-2020 Joe Misner <joe@misner.net>
 
 See LICENSE.txt in this application's installation directory for
 complete license information.
